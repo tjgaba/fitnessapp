@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../widgets/tiles.dart';
+import '../widgets/banner.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -29,7 +30,11 @@ class HomeScreen extends StatelessWidget {
 
       body: Padding(
         padding: const EdgeInsets.all(16),
-        child: GridView.builder(
+        child: Column(
+          children: [
+            const FeaturedBanner(),
+            Expanded(
+              child: GridView.builder(
           itemCount: categories.length,
 
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -47,6 +52,9 @@ class HomeScreen extends StatelessWidget {
               color: item["color"] as Color,
             );
           },
+        ),
+            ),
+          ],
         ),
       ),
     );
