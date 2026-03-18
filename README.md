@@ -23,7 +23,7 @@ A modern, responsive Flutter app for tracking and exploring workout routines. Th
 
 ## Getting Started
 
-1. Ensure you have [Flutter](https://flutter.dev/docs/get-started/install) installed.
+1. Ensure you have (https://flutter.dev/docs/get-started/install) installed.
 2. Run `flutter pub get` to fetch dependencies.
 3. Run `flutter run` to launch the app on your device or emulator.
 
@@ -38,6 +38,3 @@ A modern, responsive Flutter app for tracking and exploring workout routines. Th
 
 - Flutter 3.11.1 or higher
 
-## License
-
-This project is for educational and demonstration purposes.
