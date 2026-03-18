@@ -1,47 +1,50 @@
 import 'package:flutter/material.dart';
+import '../widgets/tiles.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
-  // 🔥 RESPONSIVE LOGIC
   int getCrossAxisCount(double width) {
-    if (width >= 1024) return 4; // large screens
-    if (width >= 600) return 3;  // tablets
-    return 2;                    // phones
+    if (width >= 1024) return 4;
+    if (width >= 600) return 3;
+    return 2;
   }
 
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
 
+    final categories = [
+      {"title": "Cardio", "icon": Icons.directions_run, "color": Colors.pinkAccent},
+      {"title": "Strength", "icon": Icons.fitness_center, "color": Colors.blueAccent},
+      {"title": "Flexibility", "icon": Icons.self_improvement, "color": Colors.greenAccent},
+      {"title": "HIIT", "icon": Icons.flash_on, "color": Colors.orangeAccent},
+    ];
+
     return Scaffold(
       appBar: AppBar(
         title: const Text("Fitness Dashboard"),
+        elevation: 0,
       ),
 
       body: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(16),
         child: GridView.builder(
-          itemCount: 6, // placeholder items
+          itemCount: categories.length,
 
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: getCrossAxisCount(width),
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
+            crossAxisSpacing: 16,
+            mainAxisSpacing: 16,
           ),
 
           itemBuilder: (context, index) {
-            return Container(
-              decoration: BoxDecoration(
-                color: Colors.indigo.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Center(
-                child: Text(
-                  "Workout $index",
-                  style: const TextStyle(fontSize: 16),
-                ),
-              ),
+            final item = categories[index];
+
+            return CategoryTile(
+              title: item["title"] as String,
+              icon: item["icon"] as IconData,
+              color: item["color"] as Color,
             );
           },
         ),

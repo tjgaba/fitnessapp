@@ -13,6 +13,12 @@ class FitnessApp extends StatelessWidget {
     return MaterialApp(
       title: 'Fitness App',
       debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        useMaterial3: true,
+        brightness: Brightness.light,
+        scaffoldBackgroundColor: const Color(0xFFF5F7FB),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueAccent),
+      ),
       home: const HomeScreen(),
     );
   }
