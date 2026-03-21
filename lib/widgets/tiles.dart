@@ -41,8 +41,8 @@ class _CategoryTileState extends State<CategoryTile> {
           boxShadow: [
             BoxShadow(
               color: isFavorite
-                  ? widget.color.withOpacity(0.8)
-                  : widget.color.withOpacity(0.4),
+                  ? widget.color.withValues(alpha: 0.8)
+                  : widget.color.withValues(alpha: 0.4),
               blurRadius: isFavorite ? 20 : 10,
               spreadRadius: isFavorite ? 3 : 1,
             ),
@@ -89,7 +89,7 @@ class _CategoryTileState extends State<CategoryTile> {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: widget.color.withOpacity(0.9),
+                          color: widget.color.withValues(alpha: 0.9),
                         ),
                       ),
                     ],

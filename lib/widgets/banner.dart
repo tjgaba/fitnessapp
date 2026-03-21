@@ -33,7 +33,7 @@ class _FeaturedBannerState extends State<FeaturedBanner> {
         // 🔥 Glow effect
         boxShadow: [
           BoxShadow(
-            color: Colors.blueAccent.withOpacity(isPressed ? 0.5 : 0.25),
+            color: Colors.blueAccent.withValues(alpha: isPressed ? 0.5 : 0.25),
             blurRadius: isPressed ? 25 : 15,
             spreadRadius: isPressed ? 4 : 2,
           ),
@@ -50,7 +50,7 @@ class _FeaturedBannerState extends State<FeaturedBanner> {
               height: 120,
               width: 120,
               decoration: BoxDecoration(
-                color: Colors.blueAccent.withOpacity(0.2),
+                color: Colors.blueAccent.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
               ),
             ),
@@ -109,7 +109,7 @@ class _FeaturedBannerState extends State<FeaturedBanner> {
 
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.blueAccent.withOpacity(
+                        color: Colors.blueAccent.withValues(alpha: 
                           isPressed ? 0.8 : 0.4,
                         ),
                         blurRadius: isPressed ? 15 : 8,
