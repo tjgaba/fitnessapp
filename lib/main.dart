@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'screens/bmi_calculator_screen.dart';
 import 'tabs/homescreen.dart';
 
 void main() {
@@ -19,6 +20,9 @@ class FitnessApp extends StatelessWidget {
         scaffoldBackgroundColor: const Color(0xFFF5F7FB),
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueAccent),
       ),
+      routes: {
+        '/bmi': (_) => const BmiCalculatorScreen(),
+      },
       home: const HomeScreen(),
     );
   }

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-import '../widgets/tiles.dart';
+
+import '../widgets/category_tile.dart';
+import '../widgets/home_banner.dart';
+import '../data/category_data.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -14,39 +17,42 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
 
-    final categories = [
-      {"title": "Cardio", "icon": Icons.directions_run, "color": Colors.pinkAccent},
-      {"title": "Strength", "icon": Icons.fitness_center, "color": Colors.blueAccent},
-      {"title": "Flexibility", "icon": Icons.self_improvement, "color": Colors.greenAccent},
-      {"title": "HIIT", "icon": Icons.flash_on, "color": Colors.orangeAccent},
-    ];
-
     return Scaffold(
+      backgroundColor: const Color(0xFFF5F7FB),
       appBar: AppBar(
-        title: const Text("Fitness Dashboard"),
+        backgroundColor: const Color(0xFFF5F7FB),
+        title: const Text('Fitness Dashboard'),
         elevation: 0,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: IconButton(
+              tooltip: 'Open BMI Calculator',
+              onPressed: () => Navigator.pushNamed(context, '/bmi'),
+              icon: const Icon(Icons.monitor_weight_outlined),
+            ),
+          ),
+        ],
       ),
-
       body: Padding(
         padding: const EdgeInsets.all(16),
-        child: GridView.builder(
-          itemCount: categories.length,
-
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: getCrossAxisCount(width),
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
-          ),
-
-          itemBuilder: (context, index) {
-            final item = categories[index];
-
-            return CategoryTile(
-              title: item["title"] as String,
-              icon: item["icon"] as IconData,
-              color: item["color"] as Color,
-            );
-          },
+        child: Column(
+          children: [
+            const HomeBanner(),
+            Expanded(
+              child: GridView.builder(
+                itemCount: appCategories.length,
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: getCrossAxisCount(width),
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                ),
+                itemBuilder: (context, index) {
+                  return CategoryTile(category: appCategories[index]);
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );

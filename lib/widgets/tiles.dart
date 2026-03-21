@@ -78,13 +78,21 @@ class _CategoryTileState extends State<CategoryTile> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
-                    widget.title,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: widget.color.withOpacity(0.9),
-                    ),
+                  // Row: small accent icon + title
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(widget.icon, color: widget.color, size: 18),
+                      const SizedBox(width: 6),
+                      Text(
+                        widget.title,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: widget.color.withOpacity(0.9),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 6),
                   Text(
