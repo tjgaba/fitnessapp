@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../app_router.dart';
 import '../utils/bmi_calculator.dart';
+import '../widgets/app_drawer.dart';
 import '../widgets/bmi_calculate_button.dart';
 import '../widgets/bmi_input_card.dart';
 import '../widgets/bmi_result_card.dart';
@@ -38,6 +40,9 @@ class _BmiCalculatorScreenState extends State<BmiCalculatorScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FB),
+      drawer: AppDrawer(
+        currentRouteName: AppRoute.bmi.name,
+      ),
       appBar: AppBar(
         backgroundColor: const Color(0xFFF5F7FB),
         foregroundColor: Colors.black87,
@@ -46,6 +51,7 @@ class _BmiCalculatorScreenState extends State<BmiCalculatorScreen> {
           'BMI Calculator',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
+        actions: const [DrawerBackAction()],
       ),
       body: SafeArea(
         child: SingleChildScrollView(

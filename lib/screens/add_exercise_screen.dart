@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../app_router.dart';
+import '../widgets/app_drawer.dart';
+
 class AddExerciseScreen extends StatefulWidget {
   const AddExerciseScreen({super.key});
 
@@ -82,6 +85,9 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FB),
+      drawer: AppDrawer(
+        currentRouteName: AppRoute.addExercise.name,
+      ),
       appBar: AppBar(
         backgroundColor: const Color(0xFFF5F7FB),
         foregroundColor: Colors.black87,
@@ -90,6 +96,7 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
           'Add Exercise',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
+        actions: const [DrawerBackAction()],
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -140,6 +147,7 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
                   validator: _validateWeight,
                 ),
                 const SizedBox(height: 14),
+
                 DropdownButtonFormField<String>(
                   value: _selectedCategory,
                   decoration: InputDecoration(
@@ -178,7 +186,11 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
                     return null;
                   },
                 ),
+
+
                 const SizedBox(height: 14),
+
+
                 DropdownButtonFormField<String>(
                   value: _selectedMuscleGroup,
                   decoration: InputDecoration(
@@ -219,6 +231,8 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
                     return null;
                   },
                 ),
+
+
                 const SizedBox(height: 18),
                 DropdownButtonFormField<String>(
                   value: _selectedIntensity,
@@ -258,7 +272,10 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
                     return null;
                   },
                 ),
+
+
                 const SizedBox(height: 18),
+                
                 _buildVolumePreview(),
                 const SizedBox(height: 20),
                 SizedBox(

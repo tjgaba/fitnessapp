@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import '../app_router.dart';
 import '../models/user_profile.dart';
 import '../utils/bmi_calculator.dart';
+import '../widgets/app_drawer.dart';
 import '../widgets/metric_card.dart';
 import '../widgets/profile_completeness.dart';
 
@@ -42,6 +44,9 @@ class _AssessmentScreenState extends State<AssessmentScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FB),
+      drawer: AppDrawer(
+        currentRouteName: AppRoute.assessment.name,
+      ),
       appBar: AppBar(
         backgroundColor: const Color(0xFFF5F7FB),
         foregroundColor: Colors.black87,
@@ -53,6 +58,7 @@ class _AssessmentScreenState extends State<AssessmentScreen> {
               letterSpacing: 0.4),
         ),
         elevation: 0,
+        actions: const [DrawerBackAction()],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
