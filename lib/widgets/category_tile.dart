@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
+import '../app_router.dart';
 import '../models/workout_category.dart';
-import '../screens/hiit_screen.dart';
-import '../screens/strength_screen.dart';
-import '../screens/cardio_screen.dart';
-import '../screens/flexibility_screen.dart';
 
 /// Tappable tile for a workout category.
 /// Uses InkWell for ripple feedback and navigates to the matching screen.
@@ -25,24 +22,14 @@ class _CategoryTileState extends State<CategoryTile> {
       if (mounted) setState(() => _pressed = false);
     });
 
-    Widget screen;
-    switch (widget.category.title) {
-      case 'HIIT':
-        screen = const HiitScreen();
-        break;
-      case 'Strength':
-        screen = const StrengthScreen();
-        break;
-      case 'Cardio':
-        screen = const CardioScreen();
-        break;
-      case 'Flexibility':
-      default:
-        screen = const FlexibilityScreen();
-        break;
-    }
-
-    Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
+    Navigator.of(context).pushRouteWithArgs(
+      AppRoute.exerciseList,
+      ExerciseListArgs(
+        categoryName: widget.category.title,
+        themeColor: widget.category.color,
+        iconData: widget.category.icon,
+      ),
+    );
   }
 
   @override

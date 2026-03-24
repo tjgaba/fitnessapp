@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../app_router.dart';
 import '../data/custom_exercise_store.dart';
 import '../models/custom_exercise.dart';
-import '../screens/add_exercise_screen.dart';
 import '../widgets/category_tile.dart';
+import '../widgets/app_drawer.dart';
 import '../widgets/home_banner.dart';
 import '../data/category_data.dart';
 
@@ -24,10 +25,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _openAddExerciseScreen() async {
-    final exerciseData = await Navigator.push<Map<String, dynamic>>(
+    final exerciseData = await Navigator.of(
       context,
-      MaterialPageRoute(builder: (_) => const AddExerciseScreen()),
-    );
+    ).pushRoute(AppRoute.addExercise) as Map<String, dynamic>?;
 
     if (exerciseData == null) {
       return;
@@ -67,6 +67,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FB),
+      drawer: AppDrawer(currentRouteName: AppRoute.home.name),
       appBar: AppBar(
         backgroundColor: const Color(0xFFF5F7FB),
         title: const Text('Fitness Dashboard'),
@@ -76,17 +77,19 @@ class _HomeScreenState extends State<HomeScreen> {
             padding: const EdgeInsets.only(right: 8),
             child: IconButton(
               tooltip: 'Open BMI Calculator',
-              onPressed: () => Navigator.pushNamed(context, '/bmi'),
+              onPressed: () => Navigator.of(context).pushRoute(AppRoute.bmi),
               icon: const Icon(Icons.monitor_weight_outlined),
             ),
           ),
         ],
       ),
+
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _openAddExerciseScreen,
         icon: const Icon(Icons.add),
         label: const Text('Add Exercise'),
       ),
+
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -136,6 +139,8 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ],
           ),
+
+
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -224,6 +229,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
               const SizedBox(height: 14),
+
               if (!_isExerciseSectionExpanded)
                 Text(
                   customExercises.isEmpty
@@ -268,6 +274,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildExerciseTile(CustomExercise exercise) {
+    // CustomExerciseStore Data
     final muscleGroup = exercise.muscleGroup;
     final category = exercise.category;
     final intensity = exercise.intensity;
