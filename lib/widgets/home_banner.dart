@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../screens/assessment_screen.dart';
+import '../app_router.dart';
 import 'metric_card.dart';
 
 /// Home screen overall-stats banner.
@@ -27,10 +27,7 @@ class _HomeBannerState extends State<HomeBanner> {
     Future.delayed(const Duration(milliseconds: 150), () {
       if (mounted) setState(() => _profilePressed = false);
     });
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const AssessmentScreen()),
-    );
+    Navigator.of(context).pushRoute(AppRoute.assessment);
   }
 
   @override
