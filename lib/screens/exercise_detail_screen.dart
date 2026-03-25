@@ -1,27 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../app_router.dart';
+import '../models/exercise.dart';
+import '../providers/routine_provider.dart';
 import '../widgets/app_drawer.dart';
 
 class ExerciseDetailScreen extends StatelessWidget {
-  final String exerciseName;
-  final String muscleGroup;
-  final int sets;
-  final int reps;
-  final double weight;
+  final Exercise exercise;
+  final Color accentColor;
 
   const ExerciseDetailScreen({
     super.key,
-    required this.exerciseName,
-    required this.muscleGroup,
-    required this.sets,
-    required this.reps,
-    required this.weight,
+    required this.exercise,
+    required this.accentColor,
   });
 
   @override
   Widget build(BuildContext context) {
-    final totalVolume = sets * reps * weight;
+    final isInRoutine = context.watch<RoutineProvider>().isInRoutine(exercise.id);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FB),
@@ -32,7 +29,7 @@ class ExerciseDetailScreen extends StatelessWidget {
         backgroundColor: const Color(0xFFF5F7FB),
         foregroundColor: Colors.black87,
         elevation: 0,
-        title: Text(exerciseName),
+        title: Text(exercise.name),
         actions: const [DrawerBackAction()],
       ),
       body: ListView(
@@ -48,7 +45,7 @@ class ExerciseDetailScreen extends StatelessWidget {
               ),
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
-                color: Colors.blueAccent.withValues(alpha: 0.18),
+                color: accentColor.withValues(alpha: 0.18),
               ),
             ),
             child: Column(
@@ -64,7 +61,7 @@ class ExerciseDetailScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '$exerciseName targets $muscleGroup with a structured working set.',
+                  '${exercise.name} targets ${exercise.muscleGroup} with a structured working set.',
                   style: const TextStyle(
                     color: Colors.black54,
                     fontSize: 13,
@@ -76,39 +73,41 @@ class ExerciseDetailScreen extends StatelessWidget {
           ),
           const SizedBox(height: 18),
           _DetailCard(
+            accentColor: accentColor,
             child: Column(
               children: [
-                _DetailRow(label: 'Exercise Name', value: exerciseName),
+                _DetailRow(label: 'Exercise Name', value: exercise.name),
                 const SizedBox(height: 12),
-                _DetailRow(label: 'Muscle Group', value: muscleGroup),
+                _DetailRow(label: 'Muscle Group', value: exercise.muscleGroup),
                 const SizedBox(height: 12),
-                _DetailRow(label: 'Sets', value: '$sets'),
+                _DetailRow(label: 'Sets', value: '${exercise.sets}'),
                 const SizedBox(height: 12),
-                _DetailRow(label: 'Reps', value: '$reps'),
+                _DetailRow(label: 'Reps', value: '${exercise.reps}'),
                 const SizedBox(height: 12),
                 _DetailRow(
                   label: 'Weight',
-                  value: '${_formatWeight(weight)} kg',
+                  value: '${_formatWeight(exercise.weight)} kg',
                 ),
               ],
             ),
           ),
           const SizedBox(height: 18),
           _DetailCard(
+            accentColor: accentColor,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Total Volume',
                   style: TextStyle(
-                    color: Colors.blueAccent,
+                    color: accentColor,
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  '$sets x $reps x ${_formatWeight(weight)} = ${_formatWeight(totalVolume)} kg',
+                  '${exercise.sets} x ${exercise.reps} x ${_formatWeight(exercise.weight)} = ${_formatWeight(exercise.volume)} kg',
                   style: const TextStyle(
                     color: Colors.black87,
                     fontSize: 24,
@@ -128,6 +127,29 @@ class ExerciseDetailScreen extends StatelessWidget {
               ],
             ),
           ),
+          const SizedBox(height: 18),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: () {
+                if (isInRoutine) {
+                  context.read<RoutineProvider>().removeExercise(exercise.id);
+                } else {
+                  context.read<RoutineProvider>().addExercise(exercise);
+                }
+              },
+              style: FilledButton.styleFrom(
+                backgroundColor: isInRoutine ? Colors.green : accentColor,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+              ),
+              icon: Icon(
+                isInRoutine ? Icons.check_circle : Icons.playlist_add_circle,
+              ),
+              label: Text(
+                isInRoutine ? 'Remove From Routine' : 'Add To Routine',
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -143,8 +165,12 @@ class ExerciseDetailScreen extends StatelessWidget {
 
 class _DetailCard extends StatelessWidget {
   final Widget child;
+  final Color accentColor;
 
-  const _DetailCard({required this.child});
+  const _DetailCard({
+    required this.child,
+    required this.accentColor,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -154,11 +180,11 @@ class _DetailCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: Colors.blueAccent.withValues(alpha: 0.24),
+          color: accentColor.withValues(alpha: 0.24),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.blueAccent.withValues(alpha: 0.12),
+            color: accentColor.withValues(alpha: 0.12),
             blurRadius: 12,
             spreadRadius: 1,
           ),

@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 
+import 'models/exercise.dart';
 import 'screens/add_exercise_screen.dart';
 import 'screens/assessment_screen.dart';
 import 'screens/bmi_calculator_screen.dart';
+import 'screens/exercise_browse_screen.dart';
 import 'screens/exercise_detail_screen.dart';
 import 'screens/exercise_list_screen.dart';
+import 'screens/routine_summary_screen.dart';
 import 'tabs/homescreen.dart';
 
 class ExerciseListArgs {
@@ -20,18 +23,12 @@ class ExerciseListArgs {
 }
 
 class ExerciseDetailArgs {
-  final String exerciseName;
-  final String muscleGroup;
-  final int sets;
-  final int reps;
-  final double weight;
+  final Exercise exercise;
+  final Color accentColor;
 
   const ExerciseDetailArgs({
-    required this.exerciseName,
-    required this.muscleGroup,
-    required this.sets,
-    required this.reps,
-    required this.weight,
+    required this.exercise,
+    required this.accentColor,
   });
 }
 
@@ -39,6 +36,8 @@ enum AppRoute<T> {
   home<void>('/home'),
   exerciseList<ExerciseListArgs>('/exercise-list'),
   exerciseDetail<ExerciseDetailArgs>('/exercise-detail'),
+  exerciseBrowse<void>('/exercise-browse'),
+  routineSummary<void>('/routine-summary'),
   addExercise<void>('/add-exercise'),
   bmi<void>('/bmi'),
   assessment<void>('/assessment');
@@ -71,12 +70,21 @@ enum AppRoute<T> {
         final typedArgs = args as ExerciseDetailArgs;
         return MaterialPageRoute<dynamic>(
           builder: (_) => ExerciseDetailScreen(
-            exerciseName: typedArgs.exerciseName,
-            muscleGroup: typedArgs.muscleGroup,
-            sets: typedArgs.sets,
-            reps: typedArgs.reps,
-            weight: typedArgs.weight,
+            exercise: typedArgs.exercise,
+            accentColor: typedArgs.accentColor,
           ),
+          settings: RouteSettings(name: name),
+        );
+
+      case AppRoute.exerciseBrowse:
+        return MaterialPageRoute<dynamic>(
+          builder: (_) => const ExerciseBrowseScreen(),
+          settings: RouteSettings(name: name),
+        );
+
+      case AppRoute.routineSummary:
+        return MaterialPageRoute<dynamic>(
+          builder: (_) => const RoutineSummaryScreen(),
           settings: RouteSettings(name: name),
         );
 

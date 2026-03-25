@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../app_router.dart';
 import '../data/custom_exercise_store.dart';
 import '../models/custom_exercise.dart';
+import '../providers/routine_provider.dart';
 import '../widgets/category_tile.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/home_banner.dart';
@@ -16,7 +18,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  bool _isExerciseSectionExpanded = true;
+  bool _isExerciseSectionExpanded = false;
 
   int getCrossAxisCount(double width) {
     if (width >= 1024) return 4;
@@ -25,25 +27,13 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _openAddExerciseScreen() async {
-    final exerciseData = await Navigator.of(
+    final customExercise = await Navigator.of(
       context,
-    ).pushRoute(AppRoute.addExercise) as Map<String, dynamic>?;
+    ).pushRoute(AppRoute.addExercise) as CustomExercise?;
 
-    if (exerciseData == null) {
+    if (customExercise == null) {
       return;
     }
-
-    final customExercise = CustomExercise(
-      id: exerciseData['id'] as String,
-      name: exerciseData['name'] as String,
-      sets: exerciseData['sets'] as int,
-      reps: exerciseData['reps'] as int,
-      weight: exerciseData['weight'] as double,
-      category: exerciseData['category'] as String,
-      muscleGroup: exerciseData['muscleGroup'] as String,
-      intensity: exerciseData['intensity'] as String,
-      totalVolume: exerciseData['totalVolume'] as double,
-    );
 
     setState(() {
       CustomExerciseStore.add(customExercise);
@@ -95,6 +85,9 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           children: [
             const HomeBanner(),
+            const SizedBox(height: 18),
+            _buildRoutineBuilderSection(context),
+            const SizedBox(height: 20),
             _buildExerciseSection(),
             const SizedBox(height: 20),
             GridView.builder(
@@ -113,6 +106,102 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildRoutineBuilderSection(BuildContext context) {
+    final routineProvider = context.watch<RoutineProvider>();
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: Colors.indigo.withValues(alpha: 0.2),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.indigo.withValues(alpha: 0.1),
+            blurRadius: 14,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.indigo.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.timeline_outlined,
+                  color: Colors.indigo,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  'Routine Builder',
+                  style: TextStyle(
+                    color: Colors.black87,
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              Text(
+                '${routineProvider.exerciseCount} selected',
+                style: const TextStyle(
+                  color: Colors.indigo,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            routineProvider.exerciseCount == 0
+                ? 'Build a cross-screen training routine with provider-backed state.'
+                : 'Track ${routineProvider.totalSets} sets and ${_formatNumber(routineProvider.totalVolume)} kg of total volume in your current routine.',
+            style: const TextStyle(
+              color: Colors.black54,
+              fontSize: 13,
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: () =>
+                      Navigator.of(context).pushRoute(AppRoute.exerciseBrowse),
+                  icon: const Icon(Icons.search),
+                  label: const Text('Browse Exercises'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () =>
+                      Navigator.of(context).pushRoute(AppRoute.routineSummary),
+                  icon: const Icon(Icons.fact_check_outlined),
+                  label: const Text('View Routine'),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

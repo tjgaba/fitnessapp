@@ -77,6 +77,20 @@ class AppDrawer extends StatelessWidget {
                     onTap: () => _openRootRoute(context, AppRoute.home),
                   ),
                   _DrawerItem(
+                    icon: Icons.playlist_add_circle_outlined,
+                    label: 'Exercise Browser',
+                    color: Colors.teal,
+                    selected: currentRouteName == AppRoute.exerciseBrowse.name,
+                    onTap: () => _openRoute(context, AppRoute.exerciseBrowse),
+                  ),
+                  _DrawerItem(
+                    icon: Icons.fact_check_outlined,
+                    label: 'Routine Summary',
+                    color: Colors.indigo,
+                    selected: currentRouteName == AppRoute.routineSummary.name,
+                    onTap: () => _openRoute(context, AppRoute.routineSummary),
+                  ),
+                  _DrawerItem(
                     icon: Icons.add_circle_outline,
                     label: 'Add Exercise',
                     color: Colors.green,

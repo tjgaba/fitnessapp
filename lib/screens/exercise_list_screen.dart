@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../app_router.dart';
 import '../data/custom_exercise_store.dart';
 import '../models/custom_exercise.dart';
+import '../models/exercise.dart';
+import '../providers/routine_provider.dart';
 import '../widgets/app_drawer.dart';
 
 class ExerciseListScreen extends StatelessWidget {
@@ -22,6 +25,7 @@ class ExerciseListScreen extends StatelessWidget {
     final brightness = ThemeData.estimateBrightnessForColor(themeColor);
     final foregroundColor =
         brightness == Brightness.dark ? Colors.white : Colors.black;
+    final routineProvider = context.watch<RoutineProvider>();
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FB),
@@ -46,9 +50,9 @@ class ExerciseListScreen extends StatelessWidget {
             itemCount: exercises.length,
             separatorBuilder: (_, __) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
-              final exercise = exercises[index];
-              final totalVolume =
-                  exercise.sets * exercise.reps * exercise.weight;
+              final entry = exercises[index];
+              final exercise = entry.exercise;
+              final isInRoutine = routineProvider.isInRoutine(exercise.id);
 
               return Material(
                 color: Colors.transparent,
@@ -58,21 +62,23 @@ class ExerciseListScreen extends StatelessWidget {
                     Navigator.of(context).pushRouteWithArgs(
                       AppRoute.exerciseDetail,
                       ExerciseDetailArgs(
-                        exerciseName: exercise.name,
-                        muscleGroup: exercise.muscleGroup,
-                        sets: exercise.sets,
-                        reps: exercise.reps,
-                        weight: exercise.weight,
+                        exercise: exercise,
+                        accentColor: themeColor,
                       ),
                     );
                   },
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 180),
+                    opacity: isInRoutine ? 0.68 : 1,
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: themeColor.withValues(alpha: 0.28),
+                        color: isInRoutine
+                            ? Colors.green.withValues(alpha: 0.4)
+                            : themeColor.withValues(alpha: 0.28),
                         width: 1.2,
                       ),
                       boxShadow: [
@@ -83,90 +89,120 @@ class ExerciseListScreen extends StatelessWidget {
                         ),
                       ],
                     ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: themeColor.withValues(alpha: 0.1),
-                            shape: BoxShape.circle,
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 48,
+                            height: 48,
+                            decoration: BoxDecoration(
+                              color: themeColor.withValues(alpha: 0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(iconData, color: themeColor),
                           ),
-                          child: Icon(iconData, color: themeColor),
-                        ),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      exercise.name,
-                                      style: const TextStyle(
-                                        color: Colors.black87,
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                  if (exercise.isCustom)
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 10,
-                                        vertical: 5,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: Colors.green.withValues(
-                                          alpha: 0.1,
-                                        ),
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: const Text(
-                                        'Custom',
-                                        style: TextStyle(
-                                          color: Colors.green,
-                                          fontSize: 11,
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        exercise.name,
+                                        style: const TextStyle(
+                                          color: Colors.black87,
+                                          fontSize: 15,
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
                                     ),
-                                ],
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                exercise.muscleGroup,
-                                style: const TextStyle(
-                                  color: Colors.black54,
-                                  fontSize: 13,
+                                    if (entry.isCustom)
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 10,
+                                          vertical: 5,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.green.withValues(
+                                            alpha: 0.1,
+                                          ),
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: const Text(
+                                          'Custom',
+                                          style: TextStyle(
+                                            color: Colors.green,
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  exercise.muscleGroup,
+                                  style: const TextStyle(
+                                    color: Colors.black54,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  '${exercise.sets} sets | ${exercise.reps} reps | ${_formatWeight(exercise.weight)} kg',
+                                  style: TextStyle(
+                                    color: themeColor,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Estimated volume: ${_formatWeight(exercise.volume)} kg',
+                                  style: const TextStyle(
+                                    color: Colors.black45,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Column(
+                            children: [
+                              IconButton(
+                                tooltip: isInRoutine
+                                    ? 'Remove from routine'
+                                    : 'Add to routine',
+                                onPressed: () {
+                                  if (isInRoutine) {
+                                    context
+                                        .read<RoutineProvider>()
+                                        .removeExercise(exercise.id);
+                                  } else {
+                                    context
+                                        .read<RoutineProvider>()
+                                        .addExercise(exercise);
+                                  }
+                                },
+                                icon: Icon(
+                                  isInRoutine
+                                      ? Icons.check_circle
+                                      : Icons.playlist_add_circle_outlined,
+                                  color: isInRoutine
+                                      ? Colors.green
+                                      : themeColor,
                                 ),
                               ),
-                              const SizedBox(height: 6),
-                              Text(
-                                '${exercise.sets} sets | ${exercise.reps} reps | ${_formatWeight(exercise.weight)} kg',
-                                style: TextStyle(
-                                  color: themeColor,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Estimated volume: ${_formatWeight(totalVolume)} kg',
-                                style: const TextStyle(
-                                  color: Colors.black45,
-                                  fontSize: 12,
-                                ),
+                              Icon(
+                                Icons.chevron_right_rounded,
+                                color: themeColor,
                               ),
                             ],
                           ),
-                        ),
-                        Icon(
-                          Icons.chevron_right_rounded,
-                          color: themeColor,
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -186,11 +222,14 @@ class ExerciseListScreen extends StatelessWidget {
         .where((exercise) => exercise.category == categoryName)
         .map(
           (exercise) => _ExerciseItem(
-            name: exercise.name,
-            muscleGroup: exercise.muscleGroup,
-            sets: exercise.sets,
-            reps: exercise.reps,
-            weight: exercise.weight,
+            exercise: Exercise(
+              id: exercise.id,
+              name: exercise.name,
+              muscleGroup: exercise.muscleGroup,
+              sets: exercise.sets,
+              reps: exercise.reps,
+              weight: exercise.weight,
+            ),
             isCustom: true,
           ),
         );
@@ -207,173 +246,225 @@ class ExerciseListScreen extends StatelessWidget {
 }
 
 class _ExerciseItem {
-  final String name;
-  final String muscleGroup;
-  final int sets;
-  final int reps;
-  final double weight;
+  final Exercise exercise;
   final bool isCustom;
 
   const _ExerciseItem({
-    required this.name,
-    required this.muscleGroup,
-    required this.sets,
-    required this.reps,
-    required this.weight,
+    required this.exercise,
     this.isCustom = false,
   });
 }
 
 const List<_ExerciseItem> _fallbackExercises = [
   _ExerciseItem(
-    name: 'Bodyweight Squat',
-    muscleGroup: 'Legs',
-    sets: 3,
-    reps: 12,
-    weight: 0,
+    exercise: Exercise(
+      id: 'fallback_bodyweight_squat_01',
+      name: 'Bodyweight Squat',
+      muscleGroup: 'Legs',
+      sets: 3,
+      reps: 12,
+      weight: 0,
+    ),
   ),
   _ExerciseItem(
-    name: 'Push-Up',
-    muscleGroup: 'Chest',
-    sets: 3,
-    reps: 15,
-    weight: 0,
+    exercise: Exercise(
+      id: 'fallback_push_up_01',
+      name: 'Push-Up',
+      muscleGroup: 'Chest',
+      sets: 3,
+      reps: 15,
+      weight: 0,
+    ),
   ),
   _ExerciseItem(
-    name: 'Mountain Climber',
-    muscleGroup: 'Core',
-    sets: 4,
-    reps: 20,
-    weight: 0,
+    exercise: Exercise(
+      id: 'fallback_mountain_climber_01',
+      name: 'Mountain Climber',
+      muscleGroup: 'Core',
+      sets: 4,
+      reps: 20,
+      weight: 0,
+    ),
   ),
   _ExerciseItem(
-    name: 'Walking Lunge',
-    muscleGroup: 'Legs',
-    sets: 3,
-    reps: 12,
-    weight: 8,
+    exercise: Exercise(
+      id: 'fallback_walking_lunge_01',
+      name: 'Walking Lunge',
+      muscleGroup: 'Legs',
+      sets: 3,
+      reps: 12,
+      weight: 8,
+    ),
   ),
 ];
 
 const Map<String, List<_ExerciseItem>> _exerciseLibrary = {
   'Strength': [
     _ExerciseItem(
-      name: 'Barbell Squat',
-      muscleGroup: 'Legs',
-      sets: 4,
-      reps: 8,
-      weight: 80,
+      exercise: Exercise(
+        id: 'strength_barbell_squat_01',
+        name: 'Barbell Squat',
+        muscleGroup: 'Legs',
+        sets: 4,
+        reps: 8,
+        weight: 80,
+      ),
     ),
     _ExerciseItem(
-      name: 'Bench Press',
-      muscleGroup: 'Chest',
-      sets: 4,
-      reps: 10,
-      weight: 60,
+      exercise: Exercise(
+        id: 'strength_bench_press_01',
+        name: 'Bench Press',
+        muscleGroup: 'Chest',
+        sets: 4,
+        reps: 10,
+        weight: 60,
+      ),
     ),
     _ExerciseItem(
-      name: 'Deadlift',
-      muscleGroup: 'Back',
-      sets: 4,
-      reps: 6,
-      weight: 100,
+      exercise: Exercise(
+        id: 'strength_deadlift_01',
+        name: 'Deadlift',
+        muscleGroup: 'Back',
+        sets: 4,
+        reps: 6,
+        weight: 100,
+      ),
     ),
     _ExerciseItem(
-      name: 'Shoulder Press',
-      muscleGroup: 'Shoulders',
-      sets: 3,
-      reps: 10,
-      weight: 24,
+      exercise: Exercise(
+        id: 'strength_shoulder_press_01',
+        name: 'Shoulder Press',
+        muscleGroup: 'Shoulders',
+        sets: 3,
+        reps: 10,
+        weight: 24,
+      ),
     ),
   ],
   'HIIT': [
     _ExerciseItem(
-      name: 'Burpees',
-      muscleGroup: 'Full Body',
-      sets: 5,
-      reps: 12,
-      weight: 0,
+      exercise: Exercise(
+        id: 'hiit_burpee_01',
+        name: 'Burpees',
+        muscleGroup: 'Full Body',
+        sets: 5,
+        reps: 12,
+        weight: 0,
+      ),
     ),
     _ExerciseItem(
-      name: 'Kettlebell Swing',
-      muscleGroup: 'Posterior Chain',
-      sets: 4,
-      reps: 20,
-      weight: 16,
+      exercise: Exercise(
+        id: 'hiit_kettlebell_swing_01',
+        name: 'Kettlebell Swing',
+        muscleGroup: 'Posterior Chain',
+        sets: 4,
+        reps: 20,
+        weight: 16,
+      ),
     ),
     _ExerciseItem(
-      name: 'Jump Squat',
-      muscleGroup: 'Legs',
-      sets: 4,
-      reps: 15,
-      weight: 0,
+      exercise: Exercise(
+        id: 'hiit_jump_squat_01',
+        name: 'Jump Squat',
+        muscleGroup: 'Legs',
+        sets: 4,
+        reps: 15,
+        weight: 0,
+      ),
     ),
     _ExerciseItem(
-      name: 'Battle Rope Slams',
-      muscleGroup: 'Arms',
-      sets: 6,
-      reps: 20,
-      weight: 12,
+      exercise: Exercise(
+        id: 'hiit_battle_rope_slams_01',
+        name: 'Battle Rope Slams',
+        muscleGroup: 'Arms',
+        sets: 6,
+        reps: 20,
+        weight: 12,
+      ),
     ),
   ],
   'Cardio': [
     _ExerciseItem(
-      name: 'Treadmill Run',
-      muscleGroup: 'Legs',
-      sets: 1,
-      reps: 30,
-      weight: 0,
+      exercise: Exercise(
+        id: 'cardio_treadmill_run_01',
+        name: 'Treadmill Run',
+        muscleGroup: 'Legs',
+        sets: 1,
+        reps: 30,
+        weight: 0,
+      ),
     ),
     _ExerciseItem(
-      name: 'Cycling Sprint',
-      muscleGroup: 'Legs',
-      sets: 6,
-      reps: 5,
-      weight: 0,
+      exercise: Exercise(
+        id: 'cardio_cycling_sprint_01',
+        name: 'Cycling Sprint',
+        muscleGroup: 'Legs',
+        sets: 6,
+        reps: 5,
+        weight: 0,
+      ),
     ),
     _ExerciseItem(
-      name: 'Rowing Machine',
-      muscleGroup: 'Back',
-      sets: 3,
-      reps: 12,
-      weight: 18,
+      exercise: Exercise(
+        id: 'cardio_rowing_machine_01',
+        name: 'Rowing Machine',
+        muscleGroup: 'Back',
+        sets: 3,
+        reps: 12,
+        weight: 18,
+      ),
     ),
     _ExerciseItem(
-      name: 'Stair Climber',
-      muscleGroup: 'Glutes',
-      sets: 4,
-      reps: 10,
-      weight: 0,
+      exercise: Exercise(
+        id: 'cardio_stair_climber_01',
+        name: 'Stair Climber',
+        muscleGroup: 'Glutes',
+        sets: 4,
+        reps: 10,
+        weight: 0,
+      ),
     ),
   ],
   'Flexibility': [
     _ExerciseItem(
-      name: 'Hamstring Stretch',
-      muscleGroup: 'Hamstrings',
-      sets: 3,
-      reps: 30,
-      weight: 0,
+      exercise: Exercise(
+        id: 'flexibility_hamstring_stretch_01',
+        name: 'Hamstring Stretch',
+        muscleGroup: 'Hamstrings',
+        sets: 3,
+        reps: 30,
+        weight: 0,
+      ),
     ),
     _ExerciseItem(
-      name: 'Cat-Cow Flow',
-      muscleGroup: 'Spine',
-      sets: 3,
-      reps: 12,
-      weight: 0,
+      exercise: Exercise(
+        id: 'flexibility_cat_cow_flow_01',
+        name: 'Cat-Cow Flow',
+        muscleGroup: 'Spine',
+        sets: 3,
+        reps: 12,
+        weight: 0,
+      ),
     ),
     _ExerciseItem(
-      name: 'Hip Flexor Stretch',
-      muscleGroup: 'Hips',
-      sets: 3,
-      reps: 30,
-      weight: 0,
+      exercise: Exercise(
+        id: 'flexibility_hip_flexor_stretch_01',
+        name: 'Hip Flexor Stretch',
+        muscleGroup: 'Hips',
+        sets: 3,
+        reps: 30,
+        weight: 0,
+      ),
     ),
     _ExerciseItem(
-      name: 'Child Pose Reach',
-      muscleGroup: 'Back',
-      sets: 4,
-      reps: 20,
-      weight: 0,
+      exercise: Exercise(
+        id: 'flexibility_child_pose_reach_01',
+        name: 'Child Pose Reach',
+        muscleGroup: 'Back',
+        sets: 4,
+        reps: 20,
+        weight: 0,
+      ),
     ),
   ],
 };

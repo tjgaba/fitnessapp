@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../app_router.dart';
+import '../models/custom_exercise.dart';
 import '../widgets/app_drawer.dart';
 
 class AddExerciseScreen extends StatefulWidget {
@@ -66,19 +67,19 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
       return;
     }
 
-    final exerciseData = <String, dynamic>{
-      'id': DateTime.now().microsecondsSinceEpoch.toString(),
-      'name': _nameController.text.trim(),
-      'sets': _setsValue!,
-      'reps': _repsValue!,
-      'weight': _weightValue!,
-      'category': _selectedCategory!,
-      'intensity': _selectedIntensity!,
-      'muscleGroup': _selectedMuscleGroup!,
-      'totalVolume': _totalVolume!,
-    };
+    final exercise = CustomExercise(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      name: _nameController.text.trim(),
+      sets: _setsValue!,
+      reps: _repsValue!,
+      weight: _weightValue!,
+      category: _selectedCategory!,
+      intensity: _selectedIntensity!,
+      muscleGroup: _selectedMuscleGroup!,
+      totalVolume: _totalVolume!,
+    );
 
-    Navigator.pop(context, exerciseData);
+    Navigator.pop(context, exercise);
   }
 
   @override
