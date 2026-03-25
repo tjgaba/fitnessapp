@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import 'providers/routine_provider.dart';
 import 'tabs/homescreen.dart';
 
 void main() {
@@ -10,16 +13,19 @@ class FitnessApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Fitness App',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.light,
-        scaffoldBackgroundColor: const Color(0xFFF5F7FB),
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueAccent),
+    return ChangeNotifierProvider(
+      create: (_) => RoutineProvider(),
+      child: MaterialApp(
+        title: 'Fitness App',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          useMaterial3: true,
+          brightness: Brightness.light,
+          scaffoldBackgroundColor: const Color(0xFFF5F7FB),
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueAccent),
+        ),
+        home: const HomeScreen(),
       ),
-      home: const HomeScreen(),
     );
   }
 }
