@@ -18,7 +18,7 @@ class BaseCategoryScreen extends StatefulWidget {
 
 class _BaseCategoryScreenState extends State<BaseCategoryScreen> {
   final Set<String> _selectedExerciseIds = <String>{};
-  bool _isCustomExerciseSectionExpanded = true;
+  bool _isCustomExerciseSectionExpanded = false;
 
   @override
   void initState() {

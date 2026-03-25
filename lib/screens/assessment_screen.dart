@@ -15,11 +15,11 @@ class AssessmentScreen extends StatefulWidget {
 
 class _AssessmentScreenState extends State<AssessmentScreen> {
   final UserProfile _profile = UserProfile();
-  bool _assessmentExpanded = true;
-  bool _goalExpanded = true;
-  bool _progressExpanded = true;
-  bool _personalDetailsExpanded = true;
-  bool _recommendationsExpanded = true;
+  bool _assessmentExpanded = false;
+  bool _goalExpanded = false;
+  bool _progressExpanded = false;
+  bool _personalDetailsExpanded = false;
+  bool _recommendationsExpanded = false;
 
   // Progress stats (mock — will come from real data layer later)
   final double _caloriesBurned = 1840;
