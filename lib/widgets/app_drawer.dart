@@ -106,7 +106,7 @@ class AppDrawer extends StatelessWidget {
                   ),
                   _DrawerItem(
                     icon: Icons.person_outline,
-                    label: 'Profile & Assessment',
+                    label: 'Profile Settings',
                     color: Colors.purple,
                     selected: currentRouteName == AppRoute.assessment.name,
                     onTap: () => _openRoute(context, AppRoute.assessment),

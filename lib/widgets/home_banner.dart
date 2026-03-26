@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
 import '../app_router.dart';
+import '../providers/profile_provider.dart';
+import '../providers/routine_provider.dart';
 import 'metric_card.dart';
 
 /// Home screen overall-stats banner.
@@ -32,6 +36,10 @@ class _HomeBannerState extends State<HomeBanner> {
 
   @override
   Widget build(BuildContext context) {
+    final profile = context.watch<ProfileProvider>();
+    final routine = context.watch<RoutineProvider>();
+    final displayName = profile.name.trim().isEmpty ? 'Guest' : profile.name.trim();
+
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       margin: const EdgeInsets.only(bottom: 20),
@@ -60,13 +68,29 @@ class _HomeBannerState extends State<HomeBanner> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Overall Stats',
-                style: TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                  letterSpacing: 0.4,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Welcome Back, $displayName',
+                      style: const TextStyle(
+                        fontSize: 19,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.black87,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Here is your current fitness snapshot.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.black.withValues(alpha: 0.6),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               // View Profile button
@@ -99,7 +123,7 @@ class _HomeBannerState extends State<HomeBanner> {
                             color: Colors.blueAccent, size: 14),
                         SizedBox(width: 5),
                         Text(
-                          'View Profile',
+                          'Profile Settings',
                           style: TextStyle(
                             color: Colors.blueAccent,
                             fontSize: 12,
@@ -162,7 +186,12 @@ class _HomeBannerState extends State<HomeBanner> {
                 color: Colors.purple,
               ),
               const SizedBox(width: 8),
-              const Expanded(child: SizedBox()),
+              MetricCard(
+                label: 'Routine Done',
+                value: '${routine.completedExerciseCount}/${routine.exerciseCount}',
+                sub: routine.hasRoutine ? 'checked complete' : 'no routine yet',
+                color: routine.isRoutineComplete ? Colors.green : Colors.indigo,
+              ),
             ],
           ),
         ],
