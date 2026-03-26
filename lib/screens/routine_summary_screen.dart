@@ -144,6 +144,10 @@ class _RoutineStats extends StatelessWidget {
                 value: '${provider.exerciseCount}',
               ),
               _StatChip(
+                label: 'Completed',
+                value: '${provider.completedExerciseCount}',
+              ),
+              _StatChip(
                 label: 'Sets',
                 value: '${provider.totalSets}',
               ),
@@ -152,6 +156,48 @@ class _RoutineStats extends StatelessWidget {
                 value: '${_formatNumber(provider.totalVolume)} kg',
               ),
             ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Routine Completion',
+                style: TextStyle(
+                  color: Colors.black87,
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                '${(provider.completionProgress * 100).toInt()}%',
+                style: const TextStyle(
+                  color: Colors.indigo,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: LinearProgressIndicator(
+              value: provider.completionProgress,
+              minHeight: 10,
+              backgroundColor: Colors.indigo.withValues(alpha: 0.12),
+              valueColor: const AlwaysStoppedAnimation<Color>(Colors.indigo),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            provider.hasRoutine
+                ? '${provider.completedExerciseCount} of ${provider.exerciseCount} exercises checked complete.'
+                : 'Add exercises to start tracking routine completion.',
+            style: const TextStyle(
+              color: Colors.black54,
+              fontSize: 12,
+            ),
           ),
           const SizedBox(height: 16),
           const Text(
@@ -323,28 +369,80 @@ class _RoutineExerciseTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final routineProvider = context.watch<RoutineProvider>();
+    final isCompleted = routineProvider.isExerciseCompleted(exercise.id);
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFF9FAFF),
+        color: isCompleted ? const Color(0xFFF3FFF7) : const Color(0xFFF9FAFF),
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: Colors.indigo.withValues(alpha: 0.14),
+          color: isCompleted
+              ? Colors.green.withValues(alpha: 0.26)
+              : Colors.indigo.withValues(alpha: 0.14),
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Checkbox(
+                value: isCompleted,
+                activeColor: Colors.green,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                onChanged: (value) {
+                  routineProvider.toggleExerciseCompleted(
+                    exercise.id,
+                    value ?? false,
+                  );
+                },
+              ),
+              const SizedBox(width: 4),
               Expanded(
-                child: Text(
-                  exercise.name,
-                  style: const TextStyle(
-                    color: Colors.black87,
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      exercise.name,
+                      style: TextStyle(
+                        color: Colors.black87,
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        decoration: isCompleted
+                            ? TextDecoration.lineThrough
+                            : TextDecoration.none,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      isCompleted ? 'Marked complete' : 'Mark this exercise complete',
+                      style: TextStyle(
+                        color: isCompleted ? Colors.green : Colors.black45,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                tooltip: isCompleted ? 'Mark incomplete' : 'Mark complete',
+                onPressed: () {
+                  routineProvider.toggleExerciseCompleted(
+                    exercise.id,
+                    !isCompleted,
+                  );
+                },
+                icon: Icon(
+                  isCompleted
+                      ? Icons.check_circle_rounded
+                      : Icons.radio_button_unchecked,
+                  color: isCompleted ? Colors.green : Colors.indigo,
                 ),
               ),
               IconButton(
@@ -362,8 +460,8 @@ class _RoutineExerciseTile extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             '${exercise.sets} x ${exercise.reps} x ${_formatNumber(exercise.weight)} kg',
-            style: const TextStyle(
-              color: Colors.indigo,
+            style: TextStyle(
+              color: isCompleted ? Colors.green : Colors.indigo,
               fontSize: 13,
               fontWeight: FontWeight.w700,
             ),
