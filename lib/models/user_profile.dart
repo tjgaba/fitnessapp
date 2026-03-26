@@ -1,16 +1,16 @@
 class UserProfile {
-  String name;
-  int age;
-  String gender; // 'Male', 'Female', 'Other'
-  double heightCm;
-  double weightKg;
-  double targetWeightKg;
-  double initialWeightKg;
-  String activityLevel; // 'Sedentary','Light','Moderate','Active','Very Active'
-  double restingHeartRate;
-  String goal; // 'Lose Weight','Build Muscle','Improve Endurance','Maintain Fitness','Improve Flexibility'
+  final String name;
+  final int age;
+  final String gender;
+  final double heightCm;
+  final double weightKg;
+  final double targetWeightKg;
+  final double initialWeightKg;
+  final String activityLevel;
+  final double restingHeartRate;
+  final String goal;
 
-  UserProfile({
+  const UserProfile({
     this.name = 'Alex',
     this.age = 28,
     this.gender = 'Male',
@@ -22,4 +22,30 @@ class UserProfile {
     this.restingHeartRate = 72,
     this.goal = 'Lose Weight',
   });
+
+  UserProfile copyWith({
+    String? name,
+    int? age,
+    String? gender,
+    double? heightCm,
+    double? weightKg,
+    double? targetWeightKg,
+    double? initialWeightKg,
+    String? activityLevel,
+    double? restingHeartRate,
+    String? goal,
+  }) {
+    return UserProfile(
+      name: name ?? this.name,
+      age: age ?? this.age,
+      gender: gender ?? this.gender,
+      heightCm: heightCm ?? this.heightCm,
+      weightKg: weightKg ?? this.weightKg,
+      targetWeightKg: targetWeightKg ?? this.targetWeightKg,
+      initialWeightKg: initialWeightKg ?? this.initialWeightKg,
+      activityLevel: activityLevel ?? this.activityLevel,
+      restingHeartRate: restingHeartRate ?? this.restingHeartRate,
+      goal: goal ?? this.goal,
+    );
+  }
 }
