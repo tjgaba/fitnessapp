@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
 import '../app_router.dart';
-import '../models/user_profile.dart';
-import '../utils/bmi_calculator.dart';
+import '../providers/profile_provider.dart';
+import '../providers/routine_provider.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/metric_card.dart';
 import '../widgets/profile_completeness.dart';
@@ -14,48 +16,33 @@ class AssessmentScreen extends StatefulWidget {
 }
 
 class _AssessmentScreenState extends State<AssessmentScreen> {
-  final UserProfile _profile = UserProfile();
   bool _assessmentExpanded = false;
   bool _goalExpanded = false;
   bool _progressExpanded = false;
   bool _personalDetailsExpanded = false;
+  bool _preferencesExpanded = false;
   bool _recommendationsExpanded = false;
-
-  // Progress stats (mock — will come from real data layer later)
   final double _caloriesBurned = 1840;
-  final double _projectedFatLoss = 0.24;
-  final double _workoutProgress = 0.65;
-
-  double get _bmi =>
-      calculateBmi(_profile.weightKg, _profile.heightCm);
-  String get _bmiCat => bmiCategory(_bmi);
-  Color get _bmiColor {
-    if (_bmi < 18.5) return Colors.blueAccent;
-    if (_bmi < 25.0) return Colors.green;
-    if (_bmi < 30.0) return Colors.orange;
-    return Colors.redAccent;
-  }
-
-  double get _profileCompleteness => 0.75;
-  double get _weightChange =>
-      _profile.weightKg - _profile.initialWeightKg;
 
   @override
   Widget build(BuildContext context) {
+    final profile = context.watch<ProfileProvider>();
+    final routine = context.watch<RoutineProvider>();
+    final bmiColor = _bmiColor(profile.bmi);
+
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FB),
-      drawer: AppDrawer(
-        currentRouteName: AppRoute.assessment.name,
-      ),
+      drawer: AppDrawer(currentRouteName: AppRoute.assessment.name),
       appBar: AppBar(
         backgroundColor: const Color(0xFFF5F7FB),
         foregroundColor: Colors.black87,
         title: const Text(
-          'Profile & Assessment',
+          'Profile Settings',
           style: TextStyle(
-              color: Colors.black87,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 0.4),
+            color: Colors.black87,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.4,
+          ),
         ),
         elevation: 0,
         actions: const [DrawerBackAction()],
@@ -65,66 +52,63 @@ class _AssessmentScreenState extends State<AssessmentScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildProfileBanner(),
+            _buildProfileBanner(profile, bmiColor),
             const SizedBox(height: 20),
-
             _buildCollapsibleSection(
               title: 'Assessment Results',
               icon: Icons.analytics_outlined,
-              color: _bmiColor,
+              color: bmiColor,
               expanded: _assessmentExpanded,
-              onToggle: () =>
-                  setState(() => _assessmentExpanded = !_assessmentExpanded),
-              child: _buildAssessmentResult(),
+              onToggle: () => setState(() => _assessmentExpanded = !_assessmentExpanded),
+              child: _buildAssessmentResult(profile, bmiColor),
             ),
             const SizedBox(height: 20),
-
             _buildCollapsibleSection(
               title: 'My Goal',
               icon: Icons.flag_outlined,
               color: Colors.green,
               expanded: _goalExpanded,
               onToggle: () => setState(() => _goalExpanded = !_goalExpanded),
-              child: _buildGoalSection(),
+              child: _buildGoalSection(profile),
             ),
             const SizedBox(height: 20),
-
             _buildCollapsibleSection(
               title: 'Progress Tracking',
               icon: Icons.trending_up,
               color: Colors.pinkAccent,
               expanded: _progressExpanded,
-              onToggle: () =>
-                  setState(() => _progressExpanded = !_progressExpanded),
-              child: _buildProgressTracking(),
+              onToggle: () => setState(() => _progressExpanded = !_progressExpanded),
+              child: _buildProgressTracking(profile, routine),
             ),
             const SizedBox(height: 20),
-
             _buildCollapsibleSection(
               title: 'Personal Details',
               icon: Icons.person_outline,
               color: Colors.blueAccent,
               expanded: _personalDetailsExpanded,
-              onToggle: () => setState(
-                () => _personalDetailsExpanded = !_personalDetailsExpanded,
-              ),
-              child: _buildPersonalDetails(),
+              onToggle: () => setState(() => _personalDetailsExpanded = !_personalDetailsExpanded),
+              child: _buildPersonalDetails(profile),
             ),
             const SizedBox(height: 20),
-
+            _buildCollapsibleSection(
+              title: 'Preferences',
+              icon: Icons.tune,
+              color: Colors.teal,
+              expanded: _preferencesExpanded,
+              onToggle: () => setState(() => _preferencesExpanded = !_preferencesExpanded),
+              child: _buildPreferences(profile),
+            ),
+            const SizedBox(height: 20),
             _buildCollapsibleSection(
               title: 'Exercise Recommendations',
               icon: Icons.recommend_outlined,
               color: Colors.orange,
               expanded: _recommendationsExpanded,
-              onToggle: () => setState(
-                () => _recommendationsExpanded = !_recommendationsExpanded,
-              ),
-              child: _buildRecommendations(),
+              onToggle: () => setState(() => _recommendationsExpanded = !_recommendationsExpanded),
+              child: _buildRecommendations(profile),
             ),
             const SizedBox(height: 20),
-
-            _buildActionButtons(),
+            _buildActionButtons(profile),
             const SizedBox(height: 32),
           ],
         ),
@@ -132,9 +116,7 @@ class _AssessmentScreenState extends State<AssessmentScreen> {
     );
   }
 
-  // ── 1. Profile Summary Banner ──────────────────────────────────────────
-
-  Widget _buildProfileBanner() {
+  Widget _buildProfileBanner(ProfileProvider profile, Color bmiColor) {
     return _card(
       color: Colors.blueAccent,
       child: Column(
@@ -142,250 +124,104 @@ class _AssessmentScreenState extends State<AssessmentScreen> {
         children: [
           Row(
             children: [
-              // Avatar
               Container(
                 width: 56,
                 height: 56,
                 decoration: BoxDecoration(
                   color: Colors.blueAccent.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
-                  border:
-                      Border.all(color: Colors.blueAccent, width: 2),
-                  boxShadow: [
-                    BoxShadow(
-                        color: Colors.blueAccent.withValues(alpha: 0.3),
-                        blurRadius: 10)
-                  ],
+                  border: Border.all(color: Colors.blueAccent, width: 2),
                 ),
-                child: const Icon(Icons.person,
-                    color: Colors.blueAccent, size: 28),
+                child: const Icon(Icons.person, color: Colors.blueAccent, size: 28),
               ),
               const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(_profile.name,
-                        style: const TextStyle(
-                            color: Colors.black87,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold)),
+                    Text(profile.name, style: const TextStyle(color: Colors.black87, fontSize: 18, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 2),
-                    Text(_profile.goal,
-                        style: const TextStyle(
-                            color: Colors.green,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600)),
+                    Text(profile.goal, style: const TextStyle(color: Colors.green, fontSize: 12, fontWeight: FontWeight.w600)),
                   ],
                 ),
               ),
-              // BMI badge
-              Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(14),
-                  border:
-                      Border.all(color: _bmiColor, width: 1.5),
-                  boxShadow: [
-                    BoxShadow(
-                        color: _bmiColor.withValues(alpha: 0.3),
-                        blurRadius: 8)
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    Text(_bmi.toStringAsFixed(1),
-                        style: TextStyle(
-                            color: _bmiColor,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold)),
-                    Text('BMI',
-                        style: TextStyle(
-                            color: _bmiColor.withValues(alpha: 0.7),
-                            fontSize: 10)),
-                  ],
-                ),
-              ),
+              _badge(profile.bmi.toStringAsFixed(1), 'BMI', bmiColor),
             ],
           ),
           const SizedBox(height: 14),
           Row(
             children: [
-              MetricCard(
-                  label: 'Weight',
-                  value: '${_profile.weightKg.toInt()} kg',
-                  sub: 'current',
-                  color: Colors.blueAccent),
+              MetricCard(label: 'Weight', value: profile.formatWeight(profile.weightKg), sub: 'current', color: Colors.blueAccent),
               const SizedBox(width: 8),
-              MetricCard(
-                  label: 'Target',
-                  value: '${_profile.targetWeightKg.toInt()} kg',
-                  sub: 'goal',
-                  color: Colors.green),
+              MetricCard(label: 'Target', value: profile.formatWeight(profile.targetWeightKg), sub: 'goal', color: Colors.green),
               const SizedBox(width: 8),
-              MetricCard(
-                  label: 'BMI Status',
-                  value: _bmiCat,
-                  sub: '',
-                  color: _bmiColor),
+              MetricCard(label: 'BMI Status', value: profile.bmiCategoryLabel, sub: '', color: bmiColor),
             ],
           ),
           const SizedBox(height: 14),
-          ProfileCompleteness(value: _profileCompleteness),
+          ProfileCompleteness(value: profile.profileCompleteness),
         ],
       ),
     );
   }
 
-  // ── 2. Personal Details ────────────────────────────────────────────────
-
-  Widget _buildPersonalDetails() {
+  Widget _buildPersonalDetails(ProfileProvider profile) {
     return _card(
       color: Colors.blueAccent,
       child: Column(
         children: [
-          _InputRow(
-              label: 'Name',
-              value: _profile.name,
-              icon: Icons.badge_outlined,
-              color: Colors.blueAccent,
-              onEdit: () => _editText('Name', _profile.name,
-                  (v) => setState(() => _profile.name = v))),
+          _InputRow(label: 'Name', value: profile.name, icon: Icons.badge_outlined, color: Colors.blueAccent, onEdit: () => _editText('Name', profile.name, (value) => context.read<ProfileProvider>().updateName(value))),
           _divider(),
-          _InputRow(
-              label: 'Age',
-              value: '${_profile.age} yrs',
-              icon: Icons.cake_outlined,
-              color: Colors.blueAccent,
-              onEdit: () => _editSlider('Age', _profile.age.toDouble(),
-                  10, 100, (v) => setState(() => _profile.age = v.toInt()))),
+          _InputRow(label: 'Age', value: '${profile.age} yrs', icon: Icons.cake_outlined, color: Colors.blueAccent, onEdit: () => _editSlider('Age', profile.age.toDouble(), 10, 100, onSave: (value) => context.read<ProfileProvider>().updateAge(value.toInt()))),
           _divider(),
-          _InputRow(
-              label: 'Gender',
-              value: _profile.gender,
-              icon: Icons.wc_outlined,
-              color: Colors.blueAccent,
-              onEdit: () => _editPicker(
-                  'Gender',
-                  ['Male', 'Female', 'Other'],
-                  _profile.gender,
-                  (v) => setState(() => _profile.gender = v))),
+          _InputRow(label: 'Gender', value: profile.gender, icon: Icons.wc_outlined, color: Colors.blueAccent, onEdit: () => _editPicker('Gender', const ['Male', 'Female', 'Other'], profile.gender, (value) => context.read<ProfileProvider>().updateGender(value))),
           _divider(),
-          _InputRow(
-              label: 'Height',
-              value: '${_profile.heightCm.toInt()} cm',
-              icon: Icons.height,
-              color: Colors.blueAccent,
-              onEdit: () => _editSlider('Height (cm)', _profile.heightCm,
-                  120, 220, (v) => setState(() => _profile.heightCm = v))),
+          _InputRow(label: 'Height', value: '${profile.heightCm.toInt()} cm', icon: Icons.height, color: Colors.blueAccent, onEdit: () => _editSlider('Height (cm)', profile.heightCm, 120, 220, onSave: (value) => context.read<ProfileProvider>().updateHeightCm(value))),
           _divider(),
-          _InputRow(
-              label: 'Current Weight',
-              value: '${_profile.weightKg.toInt()} kg',
-              icon: Icons.monitor_weight_outlined,
-              color: Colors.blueAccent,
-              onEdit: () => _editSlider('Weight (kg)', _profile.weightKg,
-                  30, 200, (v) => setState(() => _profile.weightKg = v))),
+          _InputRow(label: 'Current Weight', value: profile.formatWeight(profile.weightKg), icon: Icons.monitor_weight_outlined, color: Colors.blueAccent, onEdit: () => _editSlider('Current Weight (kg)', profile.weightKg, 30, 200, onSave: (value) => context.read<ProfileProvider>().updateWeightKg(value))),
           _divider(),
-          _InputRow(
-              label: 'Target Weight',
-              value: '${_profile.targetWeightKg.toInt()} kg',
-              icon: Icons.my_location,
-              color: Colors.green,
-              onEdit: () => _editSlider(
-                  'Target Weight (kg)',
-                  _profile.targetWeightKg,
-                  30,
-                  200,
-                  (v) => setState(() => _profile.targetWeightKg = v))),
+          _InputRow(label: 'Target Weight', value: profile.formatWeight(profile.targetWeightKg), icon: Icons.my_location, color: Colors.green, onEdit: () => _editSlider('Target Weight (kg)', profile.targetWeightKg, 30, 200, onSave: (value) => context.read<ProfileProvider>().updateTargetWeightKg(value))),
           _divider(),
-          _InputRow(
-              label: 'Activity Level',
-              value: _profile.activityLevel,
-              icon: Icons.directions_walk,
-              color: Colors.orange,
-              onEdit: () => _editPicker(
-                  'Activity Level',
-                  [
-                    'Sedentary',
-                    'Light',
-                    'Moderate',
-                    'Active',
-                    'Very Active'
-                  ],
-                  _profile.activityLevel,
-                  (v) => setState(() => _profile.activityLevel = v))),
+          _InputRow(label: 'Initial Weight', value: profile.formatWeight(profile.initialWeightKg), icon: Icons.flag_circle_outlined, color: Colors.orange, onEdit: () => _editSlider('Initial Weight (kg)', profile.initialWeightKg, 30, 200, onSave: (value) => context.read<ProfileProvider>().updateInitialWeightKg(value))),
           _divider(),
-          _InputRow(
-              label: 'Resting Heart Rate',
-              value: '${_profile.restingHeartRate.toInt()} bpm',
-              icon: Icons.favorite_border,
-              color: Colors.pinkAccent,
-              onEdit: () => _editSlider(
-                  'Heart Rate (bpm)',
-                  _profile.restingHeartRate,
-                  40,
-                  120,
-                  (v) => setState(
-                      () => _profile.restingHeartRate = v))),
+          _InputRow(label: 'Activity Level', value: profile.activityLevel, icon: Icons.directions_walk, color: Colors.orange, onEdit: () => _editPicker('Activity Level', const ['Sedentary', 'Light', 'Moderate', 'Active', 'Very Active'], profile.activityLevel, (value) => context.read<ProfileProvider>().updateActivityLevel(value))),
+          _divider(),
+          _InputRow(label: 'Resting Heart Rate', value: '${profile.restingHeartRate.toInt()} bpm', icon: Icons.favorite_border, color: Colors.pinkAccent, onEdit: () => _editSlider('Heart Rate (bpm)', profile.restingHeartRate, 40, 120, onSave: (value) => context.read<ProfileProvider>().updateRestingHeartRate(value))),
         ],
       ),
     );
   }
 
-  // ── 3. Goal Section ────────────────────────────────────────────────────
-
-  Widget _buildGoalSection() {
+  Widget _buildGoalSection(ProfileProvider profile) {
     const goals = [
-      {'label': 'Lose Weight', 'icon': Icons.trending_down, 'color': Colors.pinkAccent},
-      {'label': 'Build Muscle', 'icon': Icons.fitness_center, 'color': Colors.blueAccent},
-      {'label': 'Improve Endurance', 'icon': Icons.directions_run, 'color': Colors.orange},
-      {'label': 'Maintain Fitness', 'icon': Icons.balance, 'color': Colors.green},
-      {'label': 'Improve Flexibility', 'icon': Icons.self_improvement, 'color': Colors.purple},
+      ('Lose Weight', Icons.trending_down, Colors.pinkAccent),
+      ('Build Muscle', Icons.fitness_center, Colors.blueAccent),
+      ('Improve Endurance', Icons.directions_run, Colors.orange),
+      ('Maintain Fitness', Icons.balance, Colors.green),
+      ('Improve Flexibility', Icons.self_improvement, Colors.purple),
     ];
 
     return Wrap(
       spacing: 10,
       runSpacing: 10,
-      children: goals.map((g) {
-        final label = g['label'] as String;
-        final icon = g['icon'] as IconData;
-        final color = g['color'] as Color;
-        final selected = _profile.goal == label;
+      children: goals.map((goal) {
+        final selected = profile.goal == goal.$1;
         return GestureDetector(
-          onTap: () => setState(() => _profile.goal = label),
+          onTap: () => context.read<ProfileProvider>().updateGoal(goal.$1),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
-            padding:
-                const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
-              color: selected ? color.withValues(alpha: 0.1) : Colors.white,
+              color: selected ? goal.$3.withValues(alpha: 0.1) : Colors.white,
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                  color: selected ? color : Colors.black12,
-                  width: selected ? 1.5 : 1),
-              boxShadow: selected
-                  ? [
-                      BoxShadow(
-                          color: color.withValues(alpha: 0.28), blurRadius: 10)
-                    ]
-                  : [],
+              border: Border.all(color: selected ? goal.$3 : Colors.black12, width: selected ? 1.5 : 1),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(icon,
-                    color: selected ? color : Colors.black38, size: 16),
+                Icon(goal.$2, color: selected ? goal.$3 : Colors.black38, size: 16),
                 const SizedBox(width: 6),
-                Text(label,
-                    style: TextStyle(
-                        color: selected ? color : Colors.black54,
-                        fontSize: 13,
-                        fontWeight: selected
-                            ? FontWeight.bold
-                            : FontWeight.normal)),
+                Text(goal.$1, style: TextStyle(color: selected ? goal.$3 : Colors.black54, fontSize: 13, fontWeight: selected ? FontWeight.bold : FontWeight.normal)),
               ],
             ),
           ),
@@ -394,71 +230,52 @@ class _AssessmentScreenState extends State<AssessmentScreen> {
     );
   }
 
-  // ── 4. Assessment Result ───────────────────────────────────────────────
-
-  Widget _buildAssessmentResult() {
-    String interp;
+  Widget _buildAssessmentResult(ProfileProvider profile, Color bmiColor) {
+    String interpretation;
     String suggestion;
-    if (_bmi < 18.5) {
-      interp =
-          'Your BMI suggests you may be underweight. Focus on building healthy mass through nutrition and strength training.';
-      suggestion =
-          'Prioritise Strength training with nutrient-dense meals.';
-    } else if (_bmi < 25.0) {
-      interp =
-          'Great news — your BMI is in the normal range! Maintain your current routine for optimal health.';
-      suggestion =
-          'A balanced mix of all four workout categories will keep you in excellent shape.';
-    } else if (_bmi < 30.0) {
-      interp =
-          'Your BMI is slightly above normal. A combination of cardio and strength training can help.';
-      suggestion =
-          'Prioritise Cardio and HIIT. Strength training preserves muscle while you lose fat.';
+
+    if (profile.bmi < 18.5) {
+      interpretation = 'Your BMI suggests you may be underweight. Focus on building healthy mass through nutrition and strength training.';
+      suggestion = 'Prioritize strength training with nutrient-dense meals.';
+    } else if (profile.bmi < 25.0) {
+      interpretation = 'Your BMI is in the normal range. Maintain your current routine for balanced health and performance.';
+      suggestion = 'A balanced mix of all four workout categories will keep you in strong shape.';
+    } else if (profile.bmi < 30.0) {
+      interpretation = 'Your BMI is slightly above normal. A combination of cardio and strength training can help.';
+      suggestion = 'Prioritize cardio and HIIT while keeping strength work in place to preserve muscle.';
     } else {
-      interp =
-          'Your BMI indicates obesity. Start with low-impact exercise and consider consulting a medical professional.';
-      suggestion =
-          'Begin with Flexibility and light Cardio, then gradually increase intensity.';
+      interpretation = 'Your BMI is in a higher-risk range. Start with low-impact exercise and consider medical guidance if needed.';
+      suggestion = 'Begin with flexibility and light cardio, then gradually increase intensity.';
     }
 
     return _card(
-      color: _bmiColor,
+      color: bmiColor,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              _glowBadge('BMI: ${_bmi.toStringAsFixed(1)}', _bmiColor),
+              _glowBadge('BMI: ${profile.bmi.toStringAsFixed(1)}', bmiColor),
               const SizedBox(width: 10),
-              _glowBadge(_bmiCat, _bmiColor, small: true),
+              _glowBadge(profile.bmiCategoryLabel, bmiColor, small: true),
             ],
           ),
           const SizedBox(height: 12),
-          Text(interp,
-              style: const TextStyle(
-                  color: Colors.black54, fontSize: 13, height: 1.5)),
+          Text(interpretation, style: const TextStyle(color: Colors.black54, fontSize: 13, height: 1.5)),
           const SizedBox(height: 12),
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: Colors.green.withValues(alpha: 0.07),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                  color: Colors.green.withValues(alpha: 0.3), width: 1),
+              border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.tips_and_updates_outlined,
-                    color: Colors.green, size: 16),
+                const Icon(Icons.tips_and_updates_outlined, color: Colors.green, size: 16),
                 const SizedBox(width: 8),
-                Expanded(
-                    child: Text(suggestion,
-                        style: const TextStyle(
-                            color: Colors.black54,
-                            fontSize: 12,
-                            fontStyle: FontStyle.italic,
-                            height: 1.4))),
+                Expanded(child: Text(suggestion, style: const TextStyle(color: Colors.black54, fontSize: 12, fontStyle: FontStyle.italic, height: 1.4))),
               ],
             ),
           ),
@@ -467,75 +284,45 @@ class _AssessmentScreenState extends State<AssessmentScreen> {
     );
   }
 
-  // ── 5. Exercise Recommendations ────────────────────────────────────────
-
-  Widget _buildRecommendations() {
-    final recs = _recommendations();
+  Widget _buildRecommendations(ProfileProvider profile) {
+    final items = _recommendations(profile.goal);
     return Column(
-      children: recs.map((r) {
-        final color = r['color'] as Color;
+      children: items.map((item) {
+        final color = item['color'] as Color;
         return Container(
           margin: const EdgeInsets.only(bottom: 10),
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
-            boxShadow: [
-              BoxShadow(
-                  color: color.withValues(alpha: 0.14),
-                  blurRadius: 6,
-                  spreadRadius: 1)
-            ],
+            border: Border.all(color: color.withValues(alpha: 0.3)),
           ),
           child: Row(
             children: [
               Container(
                 padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(color: color.withValues(alpha: 0.25), blurRadius: 8)
-                  ],
-                ),
-                child: Icon(r['icon'] as IconData, color: color, size: 18),
+                decoration: BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle),
+                child: Icon(item['icon'] as IconData, color: color, size: 18),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(r['category'] as String,
-                        style: TextStyle(
-                            color: color,
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold)),
+                    Text(item['category'] as String, style: TextStyle(color: color, fontSize: 14, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 2),
-                    Text(
-                        '${r['frequency']}x/week · ${r['duration']} · ${r['intensity']}',
-                        style: const TextStyle(
-                            color: Colors.black45, fontSize: 12)),
+                    Text('${item['frequency']}x/week | ${item['duration']} | ${item['intensity']}', style: const TextStyle(color: Colors.black45, fontSize: 12)),
                   ],
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
-                  border:
-                      Border.all(color: color.withValues(alpha: 0.4), width: 1),
-                  boxShadow: [
-                    BoxShadow(color: color.withValues(alpha: 0.18), blurRadius: 5)
-                  ],
+                  border: Border.all(color: color.withValues(alpha: 0.4)),
                 ),
-                child: Text(r['intensity'] as String,
-                    style: TextStyle(
-                        color: color,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold)),
+                child: Text(item['intensity'] as String, style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold)),
               ),
             ],
           ),
@@ -544,20 +331,20 @@ class _AssessmentScreenState extends State<AssessmentScreen> {
     );
   }
 
-  List<Map<String, dynamic>> _recommendations() {
-    switch (_profile.goal) {
+  List<Map<String, dynamic>> _recommendations(String goal) {
+    switch (goal) {
       case 'Lose Weight':
         return [
           {'category': 'HIIT', 'icon': Icons.flash_on, 'color': Colors.orangeAccent, 'frequency': 3, 'duration': '30 min', 'intensity': 'High'},
           {'category': 'Cardio', 'icon': Icons.directions_run, 'color': Colors.pinkAccent, 'frequency': 4, 'duration': '40 min', 'intensity': 'Moderate'},
           {'category': 'Strength', 'icon': Icons.fitness_center, 'color': Colors.blueAccent, 'frequency': 2, 'duration': '45 min', 'intensity': 'Moderate'},
-          {'category': 'Flexibility', 'icon': Icons.self_improvement, 'color': Colors.greenAccent, 'frequency': 2, 'duration': '20 min', 'intensity': 'Low'},
+          {'category': 'Flexibility', 'icon': Icons.self_improvement, 'color': Colors.green, 'frequency': 2, 'duration': '20 min', 'intensity': 'Low'},
         ];
       case 'Build Muscle':
         return [
           {'category': 'Strength', 'icon': Icons.fitness_center, 'color': Colors.blueAccent, 'frequency': 4, 'duration': '60 min', 'intensity': 'High'},
           {'category': 'HIIT', 'icon': Icons.flash_on, 'color': Colors.orangeAccent, 'frequency': 2, 'duration': '20 min', 'intensity': 'High'},
-          {'category': 'Flexibility', 'icon': Icons.self_improvement, 'color': Colors.greenAccent, 'frequency': 3, 'duration': '20 min', 'intensity': 'Low'},
+          {'category': 'Flexibility', 'icon': Icons.self_improvement, 'color': Colors.green, 'frequency': 3, 'duration': '20 min', 'intensity': 'Low'},
           {'category': 'Cardio', 'icon': Icons.directions_run, 'color': Colors.pinkAccent, 'frequency': 1, 'duration': '30 min', 'intensity': 'Light'},
         ];
       case 'Improve Endurance':
@@ -565,69 +352,57 @@ class _AssessmentScreenState extends State<AssessmentScreen> {
           {'category': 'Cardio', 'icon': Icons.directions_run, 'color': Colors.pinkAccent, 'frequency': 5, 'duration': '45 min', 'intensity': 'Moderate'},
           {'category': 'HIIT', 'icon': Icons.flash_on, 'color': Colors.orangeAccent, 'frequency': 2, 'duration': '30 min', 'intensity': 'High'},
           {'category': 'Strength', 'icon': Icons.fitness_center, 'color': Colors.blueAccent, 'frequency': 2, 'duration': '40 min', 'intensity': 'Moderate'},
-          {'category': 'Flexibility', 'icon': Icons.self_improvement, 'color': Colors.greenAccent, 'frequency': 2, 'duration': '20 min', 'intensity': 'Low'},
+          {'category': 'Flexibility', 'icon': Icons.self_improvement, 'color': Colors.green, 'frequency': 2, 'duration': '20 min', 'intensity': 'Low'},
         ];
       case 'Improve Flexibility':
         return [
-          {'category': 'Flexibility', 'icon': Icons.self_improvement, 'color': Colors.greenAccent, 'frequency': 5, 'duration': '30 min', 'intensity': 'Low'},
+          {'category': 'Flexibility', 'icon': Icons.self_improvement, 'color': Colors.green, 'frequency': 5, 'duration': '30 min', 'intensity': 'Low'},
           {'category': 'Cardio', 'icon': Icons.directions_run, 'color': Colors.pinkAccent, 'frequency': 3, 'duration': '30 min', 'intensity': 'Light'},
           {'category': 'Strength', 'icon': Icons.fitness_center, 'color': Colors.blueAccent, 'frequency': 2, 'duration': '40 min', 'intensity': 'Moderate'},
           {'category': 'HIIT', 'icon': Icons.flash_on, 'color': Colors.orangeAccent, 'frequency': 1, 'duration': '20 min', 'intensity': 'Moderate'},
         ];
-      default: // Maintain Fitness
+      default:
         return [
           {'category': 'Cardio', 'icon': Icons.directions_run, 'color': Colors.pinkAccent, 'frequency': 3, 'duration': '30 min', 'intensity': 'Moderate'},
           {'category': 'Strength', 'icon': Icons.fitness_center, 'color': Colors.blueAccent, 'frequency': 2, 'duration': '45 min', 'intensity': 'Moderate'},
           {'category': 'HIIT', 'icon': Icons.flash_on, 'color': Colors.orangeAccent, 'frequency': 2, 'duration': '25 min', 'intensity': 'Moderate'},
-          {'category': 'Flexibility', 'icon': Icons.self_improvement, 'color': Colors.greenAccent, 'frequency': 2, 'duration': '20 min', 'intensity': 'Low'},
+          {'category': 'Flexibility', 'icon': Icons.self_improvement, 'color': Colors.green, 'frequency': 2, 'duration': '20 min', 'intensity': 'Low'},
         ];
     }
   }
 
-  // ── 6. Progress Tracking ─────────────────────────────────────────────
-
-  Widget _buildProgressTracking() {
+  Widget _buildProgressTracking(
+    ProfileProvider profile,
+    RoutineProvider routine,
+  ) {
+    final weightChange = profile.weightChangeKg;
+    final completionColor = routine.isRoutineComplete
+        ? Colors.green
+        : Colors.pinkAccent;
     return _card(
       color: Colors.pinkAccent,
       child: Column(
         children: [
           Row(
             children: [
-              MetricCard(
-                  label: 'Initial Weight',
-                  value: '${_profile.initialWeightKg.toInt()} kg',
-                  sub: 'baseline',
-                  color: Colors.blueAccent),
+              MetricCard(label: 'Initial Weight', value: profile.formatWeight(profile.initialWeightKg), sub: 'baseline', color: Colors.blueAccent),
               const SizedBox(width: 8),
-              MetricCard(
-                  label: 'Current Weight',
-                  value: '${_profile.weightKg.toInt()} kg',
-                  sub: 'recorded',
-                  color: Colors.green),
+              MetricCard(label: 'Current Weight', value: profile.formatWeight(profile.weightKg), sub: 'recorded', color: Colors.green),
               const SizedBox(width: 8),
-              MetricCard(
-                label: 'Change',
-                value:
-                    '${_weightChange >= 0 ? '+' : ''}${_weightChange.toStringAsFixed(1)} kg',
-                sub: 'actual',
-                color: _weightChange <= 0 ? Colors.green : Colors.orange,
-              ),
+              MetricCard(label: 'Change', value: '${weightChange >= 0 ? '+' : ''}${weightChange.toStringAsFixed(1)} kg', sub: 'actual', color: weightChange <= 0 ? Colors.green : Colors.orange),
             ],
           ),
           const SizedBox(height: 10),
           Row(
             children: [
-              MetricCard(
-                  label: 'Calories Burned',
-                  value: '${_caloriesBurned.toInt()} kcal',
-                  sub: 'estimated',
-                  color: Colors.orange),
+              MetricCard(label: 'Calories Burned', value: '${_caloriesBurned.toInt()} kcal', sub: 'estimated', color: Colors.orange),
               const SizedBox(width: 8),
               MetricCard(
-                  label: 'Est. Fat Loss',
-                  value: '~$_projectedFatLoss kg',
-                  sub: 'projected',
-                  color: Colors.pinkAccent),
+                label: 'Routine Done',
+                value: '${routine.completedExerciseCount}/${routine.exerciseCount}',
+                sub: routine.hasRoutine ? 'checked complete' : 'no routine yet',
+                color: completionColor,
+              ),
               const SizedBox(width: 8),
               const Expanded(child: SizedBox()),
             ],
@@ -636,92 +411,139 @@ class _AssessmentScreenState extends State<AssessmentScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Workout Completion',
-                  style: TextStyle(fontSize: 11, color: Colors.black54)),
-              Text('${(_workoutProgress * 100).toInt()}%',
-                  style: const TextStyle(
-                      fontSize: 11,
-                      color: Colors.green,
-                      fontWeight: FontWeight.bold)),
+              const Text('Workout Completion', style: TextStyle(fontSize: 11, color: Colors.black54)),
+              Text(
+                '${(routine.completionProgress * 100).toInt()}%',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: completionColor,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 6),
           ClipRRect(
             borderRadius: BorderRadius.circular(6),
             child: LinearProgressIndicator(
-              value: _workoutProgress,
-              backgroundColor: Colors.green.withValues(alpha: 0.15),
-              valueColor:
-                  const AlwaysStoppedAnimation<Color>(Colors.green),
+              value: routine.completionProgress,
+              backgroundColor: completionColor.withValues(alpha: 0.15),
+              valueColor: AlwaysStoppedAnimation<Color>(completionColor),
               minHeight: 8,
             ),
           ),
           const SizedBox(height: 10),
           Text(
-            '* Values are estimates. Update your weight regularly for more accurate progress tracking.',
+            routine.hasRoutine
+                ? routine.isRoutineComplete
+                    ? '* All exercises in your current routine are marked complete.'
+                    : '* Tick exercises complete in Routine Summary to update this progress bar.'
+                : '* Add exercises to your routine to start tracking workout completion.',
             style: TextStyle(
-                color: Colors.black.withValues(alpha: 0.35),
-                fontSize: 10,
-                fontStyle: FontStyle.italic),
+              color: Colors.black.withValues(alpha: 0.35),
+              fontSize: 10,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+          const SizedBox(height: 8),
+          if (routine.hasRoutine)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                '${routine.remainingExerciseCount} exercise(s) remaining in your routine.',
+                style: const TextStyle(
+                  color: Colors.black54,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPreferences(ProfileProvider profile) {
+    return _card(
+      color: Colors.teal,
+      child: Column(
+        children: [
+          _InputRow(label: 'Weight Unit', value: profile.weightUnit.toUpperCase(), icon: Icons.straighten, color: Colors.teal, onEdit: () => _editPicker('Weight Unit', const ['kg', 'lbs'], profile.weightUnit, (value) => context.read<ProfileProvider>().saveWeightUnit(value))),
+          _divider(),
+          _InputRow(label: 'Rest Timer', value: '${profile.restTimer} sec', icon: Icons.timer_outlined, color: Colors.teal, onEdit: () => _editSlider('Rest Timer', profile.restTimer.toDouble(), 15, 300, divisions: 19, valueTextBuilder: (value) => '${value.toInt()} sec', onSave: (value) => context.read<ProfileProvider>().saveRestTimer(value.toInt()))),
+          _divider(),
+          _PreferenceSwitchRow(
+            label: 'Notifications',
+            description: 'Workout reminders and profile alerts',
+            value: profile.notificationsEnabled,
+            color: Colors.teal,
+            onChanged: (value) => context.read<ProfileProvider>().toggleNotifications(value),
           ),
         ],
       ),
     );
   }
 
-  // ── 7. Action Buttons ─────────────────────────────────────────────────
-
-  Widget _buildActionButtons() {
+  Widget _buildActionButtons(ProfileProvider profile) {
     return Column(
       children: [
         _ActionButton(
-          label: 'SAVE PROFILE',
-          icon: Icons.save_outlined,
+          label: 'CHANGES SAVE AUTOMATICALLY',
+          icon: Icons.cloud_done_outlined,
           color: Colors.blueAccent,
-          onTap: () => _snack('Profile saved!', Colors.blueAccent),
+          onTap: () => _snack('Profile settings are saved automatically.', Colors.blueAccent),
         ),
         const SizedBox(height: 12),
         _ActionButton(
-          label: 'RECALCULATE ASSESSMENT',
-          icon: Icons.refresh,
+          label: 'UPDATE WEIGHT WEEKLY CHECK-IN',
+          icon: Icons.monitor_weight_outlined,
+          color: Colors.green,
+          onTap: () => _editSlider('Update Current Weight (kg)', profile.weightKg, 30, 200, onSave: (value) => context.read<ProfileProvider>().updateWeightKg(value)),
+        ),
+        const SizedBox(height: 12),
+        _ActionButton(
+          label: 'RESET PROFILE DATA',
+          icon: Icons.restart_alt,
           color: Colors.orange,
-          onTap: () {
-            setState(() {});
-            _snack('Assessment updated!', Colors.orange);
+          onTap: () async {
+            final confirmed = await _confirmAction('Reset Profile Data', 'This will restore your profile fields to their default values. Preferences will stay as they are.');
+            if (!mounted || !confirmed) {
+              return;
+            }
+            await context.read<ProfileProvider>().resetProfile();
+            if (!mounted) {
+              return;
+            }
+            _snack('Profile data reset.', Colors.orange);
           },
         ),
         const SizedBox(height: 12),
         _ActionButton(
-          label: 'UPDATE WEIGHT  –  WEEKLY CHECK-IN',
-          icon: Icons.monitor_weight_outlined,
-          color: Colors.green,
-          onTap: () => _editSlider(
-              'Update Progress — Current Weight (kg)',
-              _profile.weightKg,
-              30,
-              200,
-              (v) => setState(() => _profile.weightKg = v)),
-        ),
-        const SizedBox(height: 12),
-        _ActionButton(
-          label: 'AI COACH  (COMING SOON)',
-          icon: Icons.psychology_outlined,
-          color: Colors.purple,
-          onTap: () => _snack('AI Coach — coming soon!', Colors.purple),
-        ),
-        const SizedBox(height: 12),
-        _ActionButton(
-          label: 'NOTIFICATIONS  (COMING SOON)',
-          icon: Icons.notifications_outlined,
-          color: Colors.black38,
-          onTap: () =>
-              _snack('Notifications — coming soon!', Colors.black54),
+          label: 'RESET ALL SETTINGS',
+          icon: Icons.delete_sweep_outlined,
+          color: Colors.redAccent,
+          onTap: () async {
+            final confirmed = await _confirmAction('Reset Everything', 'This will reset your profile details and preferences back to the app defaults.');
+            if (!mounted || !confirmed) {
+              return;
+            }
+            await context.read<ProfileProvider>().resetAll();
+            if (!mounted) {
+              return;
+            }
+            _snack('Profile and preferences reset.', Colors.redAccent);
+          },
         ),
       ],
     );
   }
 
-  // ── Helpers ────────────────────────────────────────────────────────────
+  Color _bmiColor(double bmi) {
+    if (bmi < 18.5) return Colors.blueAccent;
+    if (bmi < 25.0) return Colors.green;
+    if (bmi < 30.0) return Colors.orange;
+    return Colors.redAccent;
+  }
 
   Widget _card({required Color color, required Widget child}) {
     return Container(
@@ -730,61 +552,50 @@ class _AssessmentScreenState extends State<AssessmentScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
-        boxShadow: [
-          BoxShadow(
-              color: color.withValues(alpha: 0.15),
-              blurRadius: 10,
-              spreadRadius: 1)
-        ],
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+        boxShadow: [BoxShadow(color: color.withValues(alpha: 0.15), blurRadius: 10, spreadRadius: 1)],
       ),
       child: child,
     );
   }
 
+  Widget _badge(String value, String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color, width: 1.5),
+      ),
+      child: Column(
+        children: [
+          Text(value, style: TextStyle(color: color, fontSize: 18, fontWeight: FontWeight.bold)),
+          Text(label, style: TextStyle(color: color.withValues(alpha: 0.7), fontSize: 10)),
+        ],
+      ),
+    );
+  }
+
   Widget _glowBadge(String text, Color color, {bool small = false}) {
     return Container(
-      padding: EdgeInsets.symmetric(
-          horizontal: small ? 12 : 16, vertical: small ? 8 : 10),
+      padding: EdgeInsets.symmetric(horizontal: small ? 12 : 16, vertical: small ? 8 : 10),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: color, width: 1.5),
-        boxShadow: [
-          BoxShadow(color: color.withValues(alpha: 0.28), blurRadius: 8)
-        ],
       ),
-      child: Text(text,
-          style: TextStyle(
-              color: color,
-              fontSize: small ? 14 : 18,
-              fontWeight: FontWeight.bold)),
+      child: Text(text, style: TextStyle(color: color, fontSize: small ? 14 : 18, fontWeight: FontWeight.bold)),
     );
   }
 
   Widget _sectionHeader(String title, IconData icon, Color color) {
     return Row(
       children: [
-        Container(
-          width: 3,
-          height: 20,
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(2),
-            boxShadow: [
-              BoxShadow(color: color.withValues(alpha: 0.5), blurRadius: 6)
-            ],
-          ),
-        ),
+        Container(width: 3, height: 20, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(2))),
         const SizedBox(width: 10),
         Icon(icon, color: color, size: 18),
         const SizedBox(width: 8),
-        Text(title,
-            style: const TextStyle(
-                color: Colors.black87,
-                fontSize: 15,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 0.4)),
+        Text(title, style: const TextStyle(color: Colors.black87, fontSize: 15, fontWeight: FontWeight.bold, letterSpacing: 0.4)),
       ],
     );
   }
@@ -803,166 +614,126 @@ class _AssessmentScreenState extends State<AssessmentScreen> {
         Row(
           children: [
             Expanded(child: _sectionHeader(title, icon, color)),
-            Material(
-              color: Colors.transparent,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(12),
-                onTap: onToggle,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: color.withValues(alpha: 0.3),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        expanded ? 'Minimize' : 'Expand',
-                        style: TextStyle(
-                          color: color,
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Icon(
-                        expanded
-                            ? Icons.keyboard_arrow_up
-                            : Icons.keyboard_arrow_down,
-                        color: color,
-                        size: 18,
-                      ),
-                    ],
-                  ),
+            InkWell(
+              borderRadius: BorderRadius.circular(12),
+              onTap: onToggle,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: color.withValues(alpha: 0.3)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(expanded ? 'Minimize' : 'Expand', style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.bold)),
+                    const SizedBox(width: 6),
+                    Icon(expanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down, color: color, size: 18),
+                  ],
                 ),
               ),
             ),
           ],
         ),
         const SizedBox(height: 12),
-        if (expanded)
-          child
-        else
-          Text(
-            '$title hidden',
-            style: const TextStyle(
-              color: Colors.black54,
-              fontSize: 13,
-            ),
-          ),
+        expanded ? child : Text('$title hidden', style: const TextStyle(color: Colors.black54, fontSize: 13)),
       ],
     );
   }
 
-  Widget _divider() =>
-      Divider(color: Colors.black.withValues(alpha: 0.06), height: 1);
+  Widget _divider() => Divider(color: Colors.black.withValues(alpha: 0.06), height: 1);
 
-  void _snack(String msg, Color color) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(msg),
-      backgroundColor: color.withValues(alpha: 0.85),
-      behavior: SnackBarBehavior.floating,
-    ));
+  void _snack(String message, Color color) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: color.withValues(alpha: 0.85),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
-  void _editText(
-      String label, String initial, Function(String) onSave) {
-    final ctrl = TextEditingController(text: initial);
-    showDialog(
+  Future<void> _editText(String label, String initial, ValueChanged<String> onSave) async {
+    final controller = TextEditingController(text: initial);
+    await showDialog<void>(
       context: context,
       builder: (_) => AlertDialog(
         title: Text(label),
-        content: TextField(controller: ctrl),
+        content: TextField(controller: controller),
         actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel')),
-          TextButton(
-            onPressed: () {
-              onSave(ctrl.text.trim());
-              Navigator.pop(context);
-            },
-            child: const Text('Save'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(onPressed: () { onSave(controller.text.trim()); Navigator.pop(context); }, child: const Text('Save')),
         ],
       ),
     );
   }
 
-  void _editSlider(String label, double initial, double min, double max,
-      Function(double) onSave) {
+  Future<void> _editSlider(
+    String label,
+    double initial,
+    double min,
+    double max, {
+    int? divisions,
+    String Function(double value)? valueTextBuilder,
+    required ValueChanged<double> onSave,
+  }) async {
     double current = initial;
-    showDialog(
+    await showDialog<void>(
       context: context,
       builder: (_) => StatefulBuilder(
-        builder: (ctx, setS) => AlertDialog(
+        builder: (_, setStateDialog) => AlertDialog(
           title: Text(label),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(current.toInt().toString(),
-                  style: const TextStyle(
-                      fontSize: 36, fontWeight: FontWeight.bold)),
-              Slider(
-                value: current,
-                min: min,
-                max: max,
-                onChanged: (v) => setS(() => current = v),
-              ),
+              Text(valueTextBuilder?.call(current) ?? current.toInt().toString(), style: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold)),
+              Slider(value: current, min: min, max: max, divisions: divisions, onChanged: (value) => setStateDialog(() => current = value)),
             ],
           ),
           actions: [
-            TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel')),
-            TextButton(
-              onPressed: () {
-                onSave(current);
-                Navigator.pop(context);
-              },
-              child: const Text('Save'),
-            ),
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+            TextButton(onPressed: () { onSave(current); Navigator.pop(context); }, child: const Text('Save')),
           ],
         ),
       ),
     );
   }
 
-  void _editPicker(String label, List<String> options, String current,
-      Function(String) onSave) {
-    showDialog(
+  Future<void> _editPicker(String label, List<String> options, String current, ValueChanged<String> onSave) async {
+    await showDialog<void>(
       context: context,
       builder: (_) => AlertDialog(
         title: Text(label),
         content: Column(
           mainAxisSize: MainAxisSize.min,
-          children: options
-              .map((opt) => ListTile(
-                    title: Text(opt),
-                    trailing: opt == current
-                        ? const Icon(Icons.check,
-                            color: Colors.blueAccent)
-                        : null,
-                    onTap: () {
-                      onSave(opt);
-                      Navigator.pop(context);
-                    },
-                  ))
-              .toList(),
+          children: options.map((option) {
+            return ListTile(
+              title: Text(option),
+              trailing: option == current ? const Icon(Icons.check, color: Colors.blueAccent) : null,
+              onTap: () { onSave(option); Navigator.pop(context); },
+            );
+          }).toList(),
         ),
       ),
     );
   }
-}
 
-// ── Input Row ─────────────────────────────────────────────────────────────────
+  Future<bool> _confirmAction(String title, String message) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Confirm')),
+        ],
+      ),
+    );
+    return confirmed ?? false;
+  }
+}
 
 class _InputRow extends StatelessWidget {
   final String label;
@@ -971,13 +742,7 @@ class _InputRow extends StatelessWidget {
   final Color color;
   final VoidCallback onEdit;
 
-  const _InputRow({
-    required this.label,
-    required this.value,
-    required this.icon,
-    required this.color,
-    required this.onEdit,
-  });
+  const _InputRow({required this.label, required this.value, required this.icon, required this.color, required this.onEdit});
 
   @override
   Widget build(BuildContext context) {
@@ -991,15 +756,9 @@ class _InputRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label,
-                    style: const TextStyle(
-                        color: Colors.black45, fontSize: 11)),
+                Text(label, style: const TextStyle(color: Colors.black45, fontSize: 11)),
                 const SizedBox(height: 2),
-                Text(value,
-                    style: const TextStyle(
-                        color: Colors.black87,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600)),
+                Text(value, style: const TextStyle(color: Colors.black87, fontSize: 14, fontWeight: FontWeight.w600)),
               ],
             ),
           ),
@@ -1007,22 +766,13 @@ class _InputRow extends StatelessWidget {
             onTap: onEdit,
             borderRadius: BorderRadius.circular(8),
             child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(8),
-                border:
-                    Border.all(color: color.withValues(alpha: 0.45), width: 1),
-                boxShadow: [
-                  BoxShadow(color: color.withValues(alpha: 0.18), blurRadius: 5)
-                ],
+                border: Border.all(color: color.withValues(alpha: 0.45)),
               ),
-              child: Text('Edit',
-                  style: TextStyle(
-                      color: color,
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold)),
+              child: Text('Edit', style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.bold)),
             ),
           ),
         ],
@@ -1031,7 +781,36 @@ class _InputRow extends StatelessWidget {
   }
 }
 
-// ── Action Button ─────────────────────────────────────────────────────────────
+class _PreferenceSwitchRow extends StatelessWidget {
+  final String label;
+  final String description;
+  final bool value;
+  final Color color;
+  final ValueChanged<bool> onChanged;
+
+  const _PreferenceSwitchRow({required this.label, required this.description, required this.value, required this.color, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(Icons.notifications_outlined, color: color, size: 18),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label, style: const TextStyle(color: Colors.black87, fontSize: 14, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 2),
+              Text(description, style: const TextStyle(color: Colors.black45, fontSize: 11)),
+            ],
+          ),
+        ),
+        Switch.adaptive(value: value, onChanged: onChanged),
+      ],
+    );
+  }
+}
 
 class _ActionButton extends StatefulWidget {
   final String label;
@@ -1039,12 +818,7 @@ class _ActionButton extends StatefulWidget {
   final Color color;
   final VoidCallback onTap;
 
-  const _ActionButton({
-    required this.label,
-    required this.icon,
-    required this.color,
-    required this.onTap,
-  });
+  const _ActionButton({required this.label, required this.icon, required this.color, required this.onTap});
 
   @override
   State<_ActionButton> createState() => _ActionButtonState();
@@ -1055,48 +829,32 @@ class _ActionButtonState extends State<_ActionButton> {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: () {
-          setState(() => _pressed = true);
-          Future.delayed(const Duration(milliseconds: 150), () {
-            if (mounted) setState(() => _pressed = false);
-          });
-          widget.onTap();
-        },
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          width: double.infinity,
-          padding:
-              const EdgeInsets.symmetric(vertical: 14, horizontal: 18),
-          decoration: BoxDecoration(
-            color:
-                Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: widget.color, width: 1.5),
-            boxShadow: [
-              BoxShadow(
-                color: widget.color
-                    .withValues(alpha: _pressed ? 0.45 : 0.18),
-                blurRadius: _pressed ? 18 : 8,
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(widget.icon, color: widget.color, size: 18),
-              const SizedBox(width: 10),
-              Text(widget.label,
-                  style: TextStyle(
-                      color: widget.color,
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 0.8)),
-            ],
-          ),
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: () {
+        setState(() => _pressed = true);
+        Future.delayed(const Duration(milliseconds: 150), () {
+          if (mounted) setState(() => _pressed = false);
+        });
+        widget.onTap();
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 18),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: widget.color, width: 1.5),
+          boxShadow: [BoxShadow(color: widget.color.withValues(alpha: _pressed ? 0.45 : 0.18), blurRadius: _pressed ? 18 : 8)],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(widget.icon, color: widget.color, size: 18),
+            const SizedBox(width: 10),
+            Text(widget.label, style: TextStyle(color: widget.color, fontSize: 13, fontWeight: FontWeight.bold, letterSpacing: 0.8)),
+          ],
         ),
       ),
     );
