@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'providers/profile_provider.dart';
 import 'providers/routine_provider.dart';
 import 'tabs/homescreen.dart';
 
@@ -13,8 +14,11 @@ class FitnessApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => RoutineProvider(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => RoutineProvider()),
+        ChangeNotifierProvider(create: (_) => ProfileProvider()),
+      ],
       child: MaterialApp(
         title: 'Fitness App',
         debugShowCheckedModeBanner: false,
