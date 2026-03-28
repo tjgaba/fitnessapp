@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../app_router.dart';
-import '../models/workout_category.dart';
+import '../../models/workout_category.dart';
 
 /// Tappable tile for a workout category.
 /// Uses InkWell for ripple feedback and navigates to the matching screen.
@@ -131,3 +131,5 @@ class _CategoryTileState extends State<CategoryTile> {
     );
   }
 }
+
+

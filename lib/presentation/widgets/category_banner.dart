@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../models/workout_category.dart';
+import '../../models/workout_category.dart';
 import 'metric_card.dart';
 
 /// Banner shown at the top of each individual category screen.
@@ -142,3 +142,5 @@ class CategoryBanner extends StatelessWidget {
     );
   }
 }
+
+

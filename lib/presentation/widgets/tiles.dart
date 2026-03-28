@@ -113,3 +113,4 @@ class _CategoryTileState extends State<CategoryTile> {
     );
   }
 }
+

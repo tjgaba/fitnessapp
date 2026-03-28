@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-import '../data/category_session_store.dart';
-import '../data/custom_exercise_store.dart';
-import '../models/category_session.dart';
-import '../models/custom_exercise.dart';
-import '../models/workout_category.dart';
+import '../../data/category_session_store.dart';
+import '../../data/custom_exercise_store.dart';
+import '../../models/category_session.dart';
+import '../../models/custom_exercise.dart';
+import '../../models/workout_category.dart';
 import '../widgets/category_banner.dart';
 
 class BaseCategoryScreen extends StatefulWidget {
@@ -631,3 +631,5 @@ class _GlowButtonState extends State<_GlowButton> {
     );
   }
 }
+
+

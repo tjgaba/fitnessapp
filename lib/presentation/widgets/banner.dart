@@ -133,3 +133,4 @@ class _FeaturedBannerState extends State<FeaturedBanner> {
     );
   }
 }
+

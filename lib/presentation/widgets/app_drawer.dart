@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../app_router.dart';
-import '../data/category_data.dart';
-import '../models/workout_category.dart';
+import '../../data/category_data.dart';
+import '../../models/workout_category.dart';
 
 class AppDrawer extends StatelessWidget {
   final String? currentRouteName;
@@ -280,3 +280,5 @@ class _DrawerItem extends StatelessWidget {
     );
   }
 }
+
+

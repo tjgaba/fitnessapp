@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../app_router.dart';
-import '../providers/profile_provider.dart';
-import '../providers/routine_provider.dart';
+import '../../domain/profile_provider.dart';
+import '../../domain/routine_provider.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/metric_card.dart';
 import '../widgets/profile_completeness.dart';
@@ -860,3 +860,5 @@ class _ActionButtonState extends State<_ActionButton> {
     );
   }
 }
+
+

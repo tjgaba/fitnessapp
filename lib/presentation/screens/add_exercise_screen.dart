@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../app_router.dart';
-import '../models/custom_exercise.dart';
+import '../../models/custom_exercise.dart';
 import '../widgets/app_drawer.dart';
 
 class AddExerciseScreen extends StatefulWidget {
@@ -521,3 +521,5 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
     return null;
   }
 }
+
+

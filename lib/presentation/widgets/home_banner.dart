@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../app_router.dart';
-import '../providers/profile_provider.dart';
-import '../providers/routine_provider.dart';
+import '../../domain/profile_provider.dart';
+import '../../domain/routine_provider.dart';
 import 'metric_card.dart';
 
 /// Home screen overall-stats banner.
@@ -199,3 +199,5 @@ class _HomeBannerState extends State<HomeBanner> {
     );
   }
 }
+
+

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../app_router.dart';
-import '../models/exercise.dart';
-import '../providers/routine_provider.dart';
+import '../../models/exercise.dart';
+import '../../domain/routine_provider.dart';
 import '../widgets/app_drawer.dart';
 
 class ExerciseDetailScreen extends StatelessWidget {
@@ -229,3 +229,5 @@ class _DetailRow extends StatelessWidget {
     );
   }
 }
+
+

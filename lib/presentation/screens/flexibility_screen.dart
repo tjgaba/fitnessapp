@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../data/category_data.dart';
+import '../../data/category_data.dart';
 import 'base_category_screen.dart';
 
 class FlexibilityScreen extends StatelessWidget {
@@ -12,3 +12,5 @@ class FlexibilityScreen extends StatelessWidget {
     return BaseCategoryScreen(category: category);
   }
 }
+
+
