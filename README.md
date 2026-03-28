@@ -1,99 +1,158 @@
 # FitnessApp
 
-A Flutter fitness and workout tracker focused on category-based exercise discovery, custom exercise creation, and Provider-powered routine building.
+A Flutter fitness tracker refactored into a layered architecture using models, repositories, injected providers, and a presentation layer.
 
 ## Overview
 
-This project now includes a global routine workflow built with the `provider` package and `ChangeNotifier`. Users can browse exercises, add them to a shared daily routine, review aggregate training stats, and remove or clear items while the UI stays synchronized across screens.
+The app lets users browse workouts, build a routine, manage profile settings, and save local data across app restarts. The codebase is organized so that:
 
-## Current Features
+- `models` define typed app data
+- `data` handles persistence
+- `domain` manages state and business logic
+- `presentation` contains screens, widgets, and navigation
+- `main.dart` wires everything together with dependency injection
 
-- Responsive dashboard with workout categories for `Strength`, `HIIT`, `Cardio`, and `Flexibility`
-- Type-safe navigation through `app_router.dart`
+## Features
+
+- Dashboard with `Strength`, `HIIT`, `Cardio`, and `Flexibility` workout categories
 - Custom exercise creation with validation and live volume preview
-- Provider-based routine state shared across the app
-- Categorized exercise browser with expand/minimize sections
-- Routine summary screen with:
-  - total exercise count
-  - total sets
-  - total volume
-  - muscle-group balance bars
-  - grouped exercise sections with expand/minimize controls
-- Reactive add/remove routine actions from:
-  - exercise browser
-  - exercise list screens
-  - exercise detail screen
-- **Profile and Preferences System** with local persistence using `shared_preferences`:
-  - User profile: name, age, gender, height, weight, target weight, activity level, heart rate, goal
-  - App preferences: weight unit (kg/lbs), rest timer, notifications
-  - Data is validated and survives app restarts
-  - Profile and preferences are managed via `ProfileProvider`
-  - Selective data wipe: reset only profile or all settings, with confirmation dialogs
-  - Dashboard greeting and goal chip update in real time
-  - Profile and preferences UI in the settings/profile screen
-  - All changes are persisted and reflected immediately in the UI
+- Shared routine flow backed by `provider`
+- Profile management with typed `UserProfile` data
+- Local persistence with `shared_preferences`
+- JSON-based profile and routine storage through repositories
+- Assessment and preference management screens
+- Architecture verification script for import-rule checks
 
-## State Management
+## Architecture
 
-Routine state is managed with:
+### Data Layer
 
-- `provider`
-- `ChangeNotifier`
-- `context.watch<RoutineProvider>()`
-- `context.read<RoutineProvider>()`
+- `ProfileRepository` stores the full `UserProfile` as one JSON string
+- `RoutineRepository` stores the routine as one JSON string
+- Repositories are the only classes that know about `shared_preferences`
 
-The shared routine data lives in `RoutineProvider`, including derived values such as `totalSets`, `totalVolume`, and `muscleGroupBreakdown`.
+### Domain Layer
 
-## Main Screens
+- `ProfileProvider` receives `ProfileRepository` through its constructor
+- `RoutineProvider` receives `RoutineRepository` through its constructor
+- Providers expose reactive state to the UI with `ChangeNotifier`
 
-- `HomeScreen`: dashboard, quick access to browse and summary flows, custom exercise section, dynamic greeting
-- `ExerciseBrowseScreen`: full exercise catalog plus user-created exercises, grouped by category
-- `ExerciseListScreen`: category-specific exercise listing with routine add/remove actions
-- `ExerciseDetailScreen`: detailed exercise view with routine add/remove action
-- `RoutineSummaryScreen`: provider-backed summary, totals, balance bars, grouped routine display
-- `AddExerciseScreen`: form for creating validated custom exercises
-- `AssessmentScreen`: profile and assessment workflow
-- `Settings/Profile Screen`: edit profile and preferences, reset data, all changes persisted
+### Presentation Layer
+
+- Screens, widgets, and router files live under `lib/presentation/`
+- Presentation files depend on `models` and `domain`
+- Presentation files do not access persistence directly
 
 ## Project Structure
 
-- `lib/main.dart` - app entry point and provider injection
-- `lib/app_router.dart` - typed route definitions and navigation helpers
-- `lib/models/exercise.dart` - immutable routine exercise model
-- `lib/models/custom_exercise.dart` - custom exercise data model
-- `lib/models/user_profile.dart` - user profile data model
-- `lib/providers/routine_provider.dart` - global routine state and derived getters
-- `lib/providers/profile_provider.dart` - profile and preferences state, persistence, and validation
-- `lib/screens/` - app screens including browse, detail, summary, assessment, settings/profile, and forms
-- `lib/data/` - category data and local custom exercise store
-- `lib/widgets/` - reusable UI building blocks
-- `lib/tabs/homescreen.dart` - main dashboard tab
+- `lib/main.dart` - app entry point and dependency wiring
+- `lib/models/` - typed data models such as `UserProfile` and `Exercise`
+- `lib/data/` - repositories and static/local data sources
+- `lib/domain/` - injected providers and state logic
+- `lib/presentation/` - router, screens, widgets, and home tab
+- `lib/utils/` - helper calculators
+- `lib/verify_architecture.dart` - architecture rule verification script
+
+```text
+lib/
+|-- main.dart
+|-- verify_architecture.dart
+|-- data/
+|   |-- category_data.dart
+|   |-- category_session_store.dart
+|   |-- custom_exercise_store.dart
+|   |-- met_values.dart
+|   |-- profile_repository.dart
+|   |-- routine_repository.dart
+|-- domain/
+|   |-- profile_provider.dart
+|   |-- routine_provider.dart
+|-- models/
+|   |-- category_session.dart
+|   |-- custom_exercise.dart
+|   |-- exercise.dart
+|   |-- progress_stats.dart
+|   |-- user_profile.dart
+|   |-- workout_category.dart
+|-- presentation/
+|   |-- app_router.dart
+|   |-- screens/
+|   |   |-- add_exercise_screen.dart
+|   |   |-- assessment_screen.dart
+|   |   |-- base_category_screen.dart
+|   |   |-- bmi_calculator_screen.dart
+|   |   |-- cardio_screen.dart
+|   |   |-- exercise_browse_screen.dart
+|   |   |-- exercise_detail_screen.dart
+|   |   |-- exercise_list_screen.dart
+|   |   |-- flexibility_screen.dart
+|   |   |-- hiit_screen.dart
+|   |   |-- routine_summary_screen.dart
+|   |   |-- strength_screen.dart
+|   |-- tabs/
+|   |   |-- homescreen.dart
+|   |-- widgets/
+|   |   |-- app_drawer.dart
+|   |   |-- banner.dart
+|   |   |-- bmi_calculate_button.dart
+|   |   |-- bmi_input_card.dart
+|   |   |-- bmi_result_card.dart
+|   |   |-- category_banner.dart
+|   |   |-- category_tile.dart
+|   |   |-- home_banner.dart
+|   |   |-- metric_card.dart
+|   |   |-- profile_completeness.dart
+|   |   |-- quick_stats.dart
+|   |   |-- tiles.dart
+|-- utils/
+|   |-- bmi_calculator.dart
+|   |-- calorie_calculator.dart
+|   |-- fat_loss_calculator.dart
+```
+
+## Main Files
+
+- `lib/models/user_profile.dart`
+- `lib/models/exercise.dart`
+- `lib/data/profile_repository.dart`
+- `lib/data/routine_repository.dart`
+- `lib/domain/profile_provider.dart`
+- `lib/domain/routine_provider.dart`
+- `lib/presentation/app_router.dart`
+- `lib/presentation/tabs/homescreen.dart`
 
 ## Getting Started
 
-1. Install Flutter from [flutter.dev](https://flutter.dev/docs/get-started/install).
+1. Install Flutter.
 2. Run `flutter pub get`.
 3. Run `flutter run`.
 
-## Provider Routine Flow
+## Verify Architecture
 
-1. Open `Browse Exercises` or any category exercise screen.
-2. Add exercises to the routine.
-3. Open `Routine Summary`.
-4. Review totals, muscle-group balance bars, and grouped exercises.
-5. Remove items or clear the routine and watch the rest of the UI update automatically.
+Run:
 
-## Requirements
+```bash
+dart lib/verify_architecture.dart
+```
 
-- Flutter SDK `^3.11.1`
-- Dart SDK matching the Flutter version in `pubspec.yaml`
-- `provider` for state management
-- `shared_preferences` for local data persistence
+The script checks:
 
-## Notes
+- `lib/presentation/` has no `shared_preferences` imports
+- `lib/data/` has no `ChangeNotifier` usage
+- `lib/domain/` has no `shared_preferences` imports
 
-- The routine and profile features use provider as the single source of truth for shared data.
-- Local UI expand/minimize controls use widget-local state only.
-- Profile and preferences are loaded and validated on startup.
-- All profile and preference changes are persisted and reflected immediately in the UI.
-- Selective reset options allow users to wipe only profile or all settings, with confirmation.
+## Dependencies
+
+- `provider`
+- `shared_preferences`
+
+## Commit History
+
+The refactor was split into focused commits:
+
+- model classes
+- repository classes
+- domain/provider constructor injection
+- presentation-layer file move
+- `main.dart` dependency wiring
+- architecture verification script
