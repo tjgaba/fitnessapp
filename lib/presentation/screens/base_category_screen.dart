@@ -341,6 +341,10 @@ class _BaseCategoryScreenState extends State<BaseCategoryScreen> {
         return 'Steady-state cardio improves cardiovascular health and builds endurance over time.';
       case 'Flexibility':
         return 'Stretching and mobility work improve range of motion, posture, and recovery speed.';
+      case 'Weightlifting':
+        return 'Olympic-style lifting develops explosive power, barbell control, and technical precision through fast, coordinated movement.';
+      case 'Strongman':
+        return 'Strongman training builds full-body power with carries, awkward-object lifts, and event-style movements that challenge grip and core stability.';
       default:
         return '';
     }

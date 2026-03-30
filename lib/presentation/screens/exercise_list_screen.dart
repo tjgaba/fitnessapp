@@ -467,6 +467,90 @@ const Map<String, List<_ExerciseItem>> _exerciseLibrary = {
       ),
     ),
   ],
+  'Weightlifting': [
+    _ExerciseItem(
+      exercise: Exercise(
+        id: 'weightlifting_power_clean_01',
+        name: 'Power Clean',
+        muscleGroup: 'Full Body',
+        sets: 5,
+        reps: 3,
+        weight: 70,
+      ),
+    ),
+    _ExerciseItem(
+      exercise: Exercise(
+        id: 'weightlifting_hang_snatch_01',
+        name: 'Hang Snatch',
+        muscleGroup: 'Shoulders',
+        sets: 4,
+        reps: 3,
+        weight: 45,
+      ),
+    ),
+    _ExerciseItem(
+      exercise: Exercise(
+        id: 'weightlifting_push_jerk_01',
+        name: 'Push Jerk',
+        muscleGroup: 'Shoulders',
+        sets: 5,
+        reps: 2,
+        weight: 60,
+      ),
+    ),
+    _ExerciseItem(
+      exercise: Exercise(
+        id: 'weightlifting_front_squat_01',
+        name: 'Front Squat',
+        muscleGroup: 'Quadriceps',
+        sets: 4,
+        reps: 5,
+        weight: 85,
+      ),
+    ),
+  ],
+  'Strongman': [
+    _ExerciseItem(
+      exercise: Exercise(
+        id: 'strongman_farmers_carry_01',
+        name: "Farmer's Carry",
+        muscleGroup: 'Forearms',
+        sets: 4,
+        reps: 30,
+        weight: 40,
+      ),
+    ),
+    _ExerciseItem(
+      exercise: Exercise(
+        id: 'strongman_atlas_stone_load_01',
+        name: 'Atlas Stone Load',
+        muscleGroup: 'Lower Back',
+        sets: 5,
+        reps: 4,
+        weight: 75,
+      ),
+    ),
+    _ExerciseItem(
+      exercise: Exercise(
+        id: 'strongman_yoke_walk_01',
+        name: 'Yoke Walk',
+        muscleGroup: 'Full Body',
+        sets: 4,
+        reps: 20,
+        weight: 140,
+      ),
+    ),
+    _ExerciseItem(
+      exercise: Exercise(
+        id: 'strongman_log_press_01',
+        name: 'Log Press',
+        muscleGroup: 'Shoulders',
+        sets: 4,
+        reps: 6,
+        weight: 55,
+      ),
+    ),
+  ],
 };
 
 

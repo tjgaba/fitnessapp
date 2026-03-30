@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../models/workout_category.dart';
 
 final List<WorkoutCategory> appCategories = [
@@ -22,7 +23,7 @@ final List<WorkoutCategory> appCategories = [
     totalTime: '4h 00m',
     caloriesBurned: 620,
     estimatedFatLossKg: 0.08,
-    intensity: 'Moderate–High',
+    intensity: 'Moderate-High',
   ),
   WorkoutCategory(
     title: 'Cardio',
@@ -45,5 +46,27 @@ final List<WorkoutCategory> appCategories = [
     caloriesBurned: 150,
     estimatedFatLossKg: 0.02,
     intensity: 'Low',
+  ),
+  WorkoutCategory(
+    title: 'Weightlifting',
+    icon: Icons.sports_gymnastics,
+    color: Colors.deepPurpleAccent,
+    sessionsCompleted: 1,
+    sessionsGoalPerWeek: 3,
+    totalTime: '2h 15m',
+    caloriesBurned: 340,
+    estimatedFatLossKg: 0.04,
+    intensity: 'High',
+  ),
+  WorkoutCategory(
+    title: 'Strongman',
+    icon: Icons.hardware,
+    color: Colors.brown,
+    sessionsCompleted: 1,
+    sessionsGoalPerWeek: 2,
+    totalTime: '2h 00m',
+    caloriesBurned: 410,
+    estimatedFatLossKg: 0.05,
+    intensity: 'High',
   ),
 ];
