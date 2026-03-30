@@ -3,9 +3,11 @@ import 'package:provider/provider.dart';
 
 import 'data/profile_repository.dart';
 import 'data/routine_repository.dart';
+import 'data/exercise_api_repository.dart';
+import 'domain/exercise_search_provider.dart';
 import 'domain/profile_provider.dart';
 import 'domain/routine_provider.dart';
-import 'presentation/tabs/homescreen.dart';
+import 'presentation/app_router.dart';
 
 void main() {
   runApp(const FitnessApp());
@@ -20,6 +22,7 @@ class FitnessApp extends StatelessWidget {
       providers: [
         Provider<ProfileRepository>(create: (_) => ProfileRepository()),
         Provider<RoutineRepository>(create: (_) => RoutineRepository()),
+        Provider<ExerciseApiRepository>(create: (_) => ExerciseApiRepository()),
         ChangeNotifierProvider(
           create: (context) =>
               ProfileProvider(context.read<ProfileRepository>()),
@@ -27,6 +30,11 @@ class FitnessApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (context) =>
               RoutineProvider(context.read<RoutineRepository>()),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => ExerciseSearchProvider(
+            context.read<ExerciseApiRepository>(),
+          ),
         ),
       ],
       child: MaterialApp(
@@ -38,7 +46,7 @@ class FitnessApp extends StatelessWidget {
           scaffoldBackgroundColor: const Color(0xFFF5F7FB),
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueAccent),
         ),
-        home: const HomeScreen(),
+        home: const AppRouter(),
       ),
     );
   }

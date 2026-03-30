@@ -64,6 +64,15 @@ class _HomeScreenState extends State<HomeScreen> {
         elevation: 0,
         actions: [
           Padding(
+            padding: const EdgeInsets.only(right: 4),
+            child: IconButton(
+              tooltip: 'Search API Exercises',
+              onPressed: () =>
+                  Navigator.of(context).pushRoute(AppRoute.exerciseSearch),
+              icon: const Icon(Icons.travel_explore_outlined),
+            ),
+          ),
+          Padding(
             padding: const EdgeInsets.only(right: 8),
             child: IconButton(
               tooltip: 'Open BMI Calculator',
@@ -188,6 +197,15 @@ class _HomeScreenState extends State<HomeScreen> {
                       Navigator.of(context).pushRoute(AppRoute.exerciseBrowse),
                   icon: const Icon(Icons.search),
                   label: const Text('Browse Exercises'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: FilledButton.tonalIcon(
+                  onPressed: () =>
+                      Navigator.of(context).pushRoute(AppRoute.exerciseSearch),
+                  icon: const Icon(Icons.travel_explore_outlined),
+                  label: const Text('Search API'),
                 ),
               ),
               const SizedBox(width: 12),
