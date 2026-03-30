@@ -1,20 +1,21 @@
 import 'dart:io';
 
 void main() {
+  final projectRoot = _resolveProjectRoot();
   final checks = <ArchitectureCheck>[
     ArchitectureCheck(
       name: 'presentation has no shared_preferences imports',
-      directoryPath: 'lib/presentation',
+      directoryPath: _resolveFromRoot(projectRoot, 'lib/presentation'),
       forbiddenPattern: 'package:shared_preferences',
     ),
     ArchitectureCheck(
       name: 'data has no ChangeNotifier usage',
-      directoryPath: 'lib/data',
+      directoryPath: _resolveFromRoot(projectRoot, 'lib/data'),
       forbiddenPattern: 'ChangeNotifier',
     ),
     ArchitectureCheck(
       name: 'domain has no shared_preferences imports',
-      directoryPath: 'lib/domain',
+      directoryPath: _resolveFromRoot(projectRoot, 'lib/domain'),
       forbiddenPattern: 'package:shared_preferences',
     ),
   ];
@@ -28,6 +29,18 @@ void main() {
       stdout.writeln('  - $violation');
     }
   }
+}
+
+String _resolveProjectRoot() {
+  final scriptDirectory = File.fromUri(Platform.script).parent;
+  final rootDirectory = scriptDirectory.parent;
+  return rootDirectory.path;
+}
+
+String _resolveFromRoot(String rootPath, String relativePath) {
+  final separator = Platform.pathSeparator;
+  final normalized = relativePath.replaceAll('/', separator);
+  return '$rootPath$separator$normalized';
 }
 
 class ArchitectureCheck {

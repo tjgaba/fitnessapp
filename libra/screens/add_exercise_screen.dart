@@ -420,7 +420,7 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
               ),
               const SizedBox(height: 12),
               Text(
-                'Total Volume: ${sets ?? '--'} x ${reps ?? '--'} x ${weight?.toStringAsFixed(weight == weight?.roundToDouble() ? 0 : 1) ?? '--'} = ${totalVolume?.toStringAsFixed(totalVolume == totalVolume?.roundToDouble() ? 0 : 1) ?? '--'} kg',
+                'Total Volume: ${sets ?? '--'} x ${reps ?? '--'} x ${weight?.toStringAsFixed(weight == weight.roundToDouble() ? 0 : 1) ?? '--'} = ${totalVolume?.toStringAsFixed(totalVolume == totalVolume.roundToDouble() ? 0 : 1) ?? '--'} kg',
                 style: const TextStyle(
                   color: Colors.black87,
                   fontSize: 16,
