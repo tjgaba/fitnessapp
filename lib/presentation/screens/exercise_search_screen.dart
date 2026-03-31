@@ -14,17 +14,79 @@ class ExerciseSearchScreen extends StatefulWidget {
 }
 
 class _ExerciseSearchScreenState extends State<ExerciseSearchScreen> {
-  final TextEditingController _searchController = TextEditingController();
+  static const List<String> _exerciseTypes = <String>[
+    'strength',
+    'cardio',
+    'stretching',
+    'plyometrics',
+    'strongman',
+    'weightlifting',
+  ];
+  static const Map<String, List<String>> _musclesByType =
+      <String, List<String>>{
+        'strength': <String>[
+          'abdominals',
+          'biceps',
+          'chest',
+          'forearms',
+          'lats',
+          'lower_back',
+          'middle_back',
+          'quadriceps',
+          'shoulders',
+          'triceps',
+        ],
+        'cardio': <String>[
+          'abdominals',
+          'calves',
+          'glutes',
+          'hamstrings',
+          'quadriceps',
+        ],
+        'stretching': <String>[
+          'abdominals',
+          'hamstrings',
+          'hips',
+          'lower_back',
+          'quadriceps',
+          'shoulders',
+        ],
+        'plyometrics': <String>[
+          'calves',
+          'glutes',
+          'hamstrings',
+          'quadriceps',
+          'shoulders',
+        ],
+        'strongman': <String>[
+          'forearms',
+          'lower_back',
+          'quadriceps',
+          'shoulders',
+          'traps',
+        ],
+        'weightlifting': <String>[
+          'calves',
+          'glutes',
+          'hamstrings',
+          'quadriceps',
+          'shoulders',
+          'traps',
+        ],
+      };
 
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
+  String? _selectedType;
+  String? _selectedMuscle;
 
   void _submitSearch() {
+    final selectedType = (_selectedType ?? '').trim();
+    if (selectedType.isEmpty) {
+      return;
+    }
+
     context.read<ExerciseSearchProvider>().searchExercises(
-      _searchController.text,
+      type: selectedType,
+      muscle: (_selectedMuscle ?? '').trim(),
     );
   }
 
@@ -79,27 +141,105 @@ class _ExerciseSearchScreenState extends State<ExerciseSearchScreen> {
           children: [
             Consumer<ExerciseSearchProvider>(
               builder: (context, provider, _) {
-                return TextField(
-                  controller: _searchController,
-                  textInputAction: TextInputAction.search,
-                  onSubmitted: (_) => _submitSearch(),
-                  decoration: InputDecoration(
-                    hintText:
-                        'Search by muscle (e.g., biceps, chest, quadriceps)',
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(18),
-                      borderSide: BorderSide.none,
+                final muscleOptions = _selectedType == null
+                    ? const <String>[]
+                    : (_musclesByType[_selectedType!] ?? const <String>[]);
+
+                return Row(
+                  children: [
+                    Expanded(
+                      child: DropdownButtonFormField<String>(
+                        value: _selectedType,
+                        items: _exerciseTypes
+                            .map(
+                              (type) => DropdownMenuItem<String>(
+                                value: type,
+                                child: Text(_formatTypeLabel(type)),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: provider.isLoading
+                            ? null
+                            : (value) {
+                                setState(() {
+                                  _selectedType = value;
+                                  _selectedMuscle = null;
+                                });
+                              },
+                        decoration: InputDecoration(
+                          hintText: 'Select type',
+                          filled: true,
+                          fillColor: Colors.white,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(18),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                      ),
                     ),
-                    suffixIcon: IconButton(
-                      tooltip: 'Search exercises',
-                      onPressed: provider.isLoading ? null : _submitSearch,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: DropdownButtonFormField<String>(
+                        value: muscleOptions.contains(_selectedMuscle)
+                            ? _selectedMuscle
+                            : null,
+                        items: muscleOptions
+                            .map(
+                              (muscle) => DropdownMenuItem<String>(
+                                value: muscle,
+                                child: Text(_formatTypeLabel(muscle)),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: provider.isLoading || _selectedType == null
+                            ? null
+                            : (value) {
+                                setState(() {
+                                  _selectedMuscle = value;
+                                });
+                              },
+                        decoration: InputDecoration(
+                          hintText: 'Select muscle',
+                          filled: true,
+                          fillColor: Colors.white,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(18),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    FilledButton.icon(
+                      onPressed: provider.isLoading || _selectedType == null
+                          ? null
+                          : _submitSearch,
                       icon: const Icon(Icons.search),
+                      label: const Text('Search'),
                     ),
-                  ),
+                  ],
                 );
               },
+            ),
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(
+                  color: Colors.blueAccent.withValues(alpha: 0.12),
+                ),
+              ),
+              child: const Text(
+                'Pick a type first, then optionally narrow the results by muscle.',
+                style: TextStyle(
+                  color: Colors.black54,
+                  fontSize: 13,
+                  height: 1.5,
+                ),
+              ),
             ),
             const SizedBox(height: 16),
             Expanded(
@@ -269,10 +409,13 @@ class _ExerciseSearchScreenState extends State<ExerciseSearchScreen> {
                     );
                   }
 
-                  if (provider.lastQuery.isNotEmpty) {
+                  if (provider.lastType.isNotEmpty) {
+                    final label = provider.lastMuscle == null
+                        ? _formatTypeLabel(provider.lastType)
+                        : '${_formatTypeLabel(provider.lastType)} / ${_formatTypeLabel(provider.lastMuscle!)}';
                     return Center(
                       child: Text(
-                        'No exercises found for "${provider.lastQuery}". Try a different muscle group.',
+                        'No exercises found for "$label". Try another filter combination.',
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                           color: Colors.black54,
@@ -294,7 +437,7 @@ class _ExerciseSearchScreenState extends State<ExerciseSearchScreen> {
                         ),
                         SizedBox(height: 12),
                         Text(
-                          'Search for exercises by muscle group',
+                          'Search for exercises by type',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: Colors.black54,
@@ -311,6 +454,21 @@ class _ExerciseSearchScreenState extends State<ExerciseSearchScreen> {
         ),
       ),
     );
+  }
+
+  String _formatTypeLabel(String type) {
+    if (type.isEmpty) {
+      return 'Unknown';
+    }
+
+    return type
+        .split('_')
+        .map(
+          (segment) => segment.isEmpty
+              ? segment
+              : '${segment[0].toUpperCase()}${segment.substring(1)}',
+        )
+        .join(' ');
   }
 }
 

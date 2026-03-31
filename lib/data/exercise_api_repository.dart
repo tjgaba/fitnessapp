@@ -8,11 +8,20 @@ class ExerciseApiRepository {
 
   final Dio _dio = Dio();
 
-  Future<List<ApiExercise>> searchExercises(String muscle) async {
+  Future<List<ApiExercise>> searchExercises({
+    required String type,
+    String? muscle,
+  }) async {
     try {
+      final queryParameters = <String, dynamic>{'type': type};
+      final normalizedMuscle = (muscle ?? '').trim();
+      if (normalizedMuscle.isNotEmpty) {
+        queryParameters['muscle'] = normalizedMuscle;
+      }
+
       final response = await _dio.get<dynamic>(
         _baseUrl,
-        queryParameters: {'muscle': muscle},
+        queryParameters: queryParameters,
         options: Options(
           headers: {'X-Api-Key': _apiKey},
         ),
