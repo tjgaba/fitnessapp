@@ -113,7 +113,7 @@ class _BrowseHeader extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             exerciseCount == 0
-                ? 'Browse the full exercise inventory across Strength, HIIT, Cardio, and Flexibility. Your custom exercises are included inside their chosen categories.'
+                ? 'Browse the full exercise inventory across Strength, HIIT, Cardio, Flexibility, Weightlifting, and Strongman. Your custom exercises are included inside their chosen categories.'
                 : '$exerciseCount exercise(s) already in your routine. Tiles update automatically when items are added or removed.',
             style: const TextStyle(
               color: Colors.black54,
@@ -689,6 +689,102 @@ const List<_ExerciseCategorySectionData> _baseCatalogSections = [
           sets: 4,
           reps: 20,
           weight: 0,
+        ),
+      ),
+    ],
+  ),
+  _ExerciseCategorySectionData(
+    title: 'Weightlifting',
+    description: 'Olympic-style lifts focused on speed, timing, and power.',
+    icon: Icons.sports_gymnastics,
+    color: Colors.deepPurpleAccent,
+    exercises: [
+      _CatalogExerciseEntry(
+        exercise: Exercise(
+          id: 'weightlifting_power_clean_01',
+          name: 'Power Clean',
+          muscleGroup: 'Full Body',
+          sets: 5,
+          reps: 3,
+          weight: 70,
+        ),
+      ),
+      _CatalogExerciseEntry(
+        exercise: Exercise(
+          id: 'weightlifting_hang_snatch_01',
+          name: 'Hang Snatch',
+          muscleGroup: 'Shoulders',
+          sets: 4,
+          reps: 3,
+          weight: 45,
+        ),
+      ),
+      _CatalogExerciseEntry(
+        exercise: Exercise(
+          id: 'weightlifting_push_jerk_01',
+          name: 'Push Jerk',
+          muscleGroup: 'Shoulders',
+          sets: 5,
+          reps: 2,
+          weight: 60,
+        ),
+      ),
+      _CatalogExerciseEntry(
+        exercise: Exercise(
+          id: 'weightlifting_front_squat_01',
+          name: 'Front Squat',
+          muscleGroup: 'Quadriceps',
+          sets: 4,
+          reps: 5,
+          weight: 85,
+        ),
+      ),
+    ],
+  ),
+  _ExerciseCategorySectionData(
+    title: 'Strongman',
+    description: 'Carries, loads, and awkward-object work for brute strength.',
+    icon: Icons.hardware,
+    color: Colors.brown,
+    exercises: [
+      _CatalogExerciseEntry(
+        exercise: Exercise(
+          id: 'strongman_farmers_carry_01',
+          name: "Farmer's Carry",
+          muscleGroup: 'Forearms',
+          sets: 4,
+          reps: 30,
+          weight: 40,
+        ),
+      ),
+      _CatalogExerciseEntry(
+        exercise: Exercise(
+          id: 'strongman_atlas_stone_load_01',
+          name: 'Atlas Stone Load',
+          muscleGroup: 'Lower Back',
+          sets: 5,
+          reps: 4,
+          weight: 75,
+        ),
+      ),
+      _CatalogExerciseEntry(
+        exercise: Exercise(
+          id: 'strongman_yoke_walk_01',
+          name: 'Yoke Walk',
+          muscleGroup: 'Full Body',
+          sets: 4,
+          reps: 20,
+          weight: 140,
+        ),
+      ),
+      _CatalogExerciseEntry(
+        exercise: Exercise(
+          id: 'strongman_log_press_01',
+          name: 'Log Press',
+          muscleGroup: 'Shoulders',
+          sets: 4,
+          reps: 6,
+          weight: 55,
         ),
       ),
     ],
