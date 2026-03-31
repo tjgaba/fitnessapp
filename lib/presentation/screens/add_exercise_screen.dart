@@ -150,7 +150,7 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
                 const SizedBox(height: 14),
 
                 DropdownButtonFormField<String>(
-                  value: _selectedCategory,
+                  initialValue: _selectedCategory,
                   decoration: InputDecoration(
                     labelText: 'Category',
                     hintText: 'Select workout category...',
@@ -193,7 +193,7 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
 
 
                 DropdownButtonFormField<String>(
-                  value: _selectedMuscleGroup,
+                  initialValue: _selectedMuscleGroup,
                   decoration: InputDecoration(
                     labelText: 'Target Muscle Group',
                     hintText: 'Select Muscle Group...',
@@ -236,7 +236,7 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
 
                 const SizedBox(height: 18),
                 DropdownButtonFormField<String>(
-                  value: _selectedIntensity,
+                  initialValue: _selectedIntensity,
                   decoration: InputDecoration(
                     labelText: 'Intensity',
                     hintText: 'Select intensity level...',

@@ -59,7 +59,7 @@ class _BaseCategoryScreenState extends State<BaseCategoryScreen> {
           children: [
             ValueListenableBuilder<Map<String, List<CategorySession>>>(
               valueListenable: CategorySessionStore.sessionsByCategory,
-              builder: (context, _, __) {
+              builder: (context, _, _) {
                 final sessions = CategorySessionStore.sessionsFor(category.title);
                 final completedCount =
                     sessions.where((session) => session.completed).length;
@@ -111,7 +111,7 @@ class _BaseCategoryScreenState extends State<BaseCategoryScreen> {
             const SizedBox(height: 10),
             ValueListenableBuilder<Map<String, List<CategorySession>>>(
               valueListenable: CategorySessionStore.sessionsByCategory,
-              builder: (context, _, __) {
+              builder: (context, _, _) {
                 final sessions = CategorySessionStore.sessionsFor(category.title);
                 final exerciseLookup = {
                   for (final exercise in CustomExerciseStore.exercises.value)
@@ -256,7 +256,7 @@ class _BaseCategoryScreenState extends State<BaseCategoryScreen> {
                             },
                           ),
                         )
-                        .toList(),
+                        ,
                     const SizedBox(height: 12),
                     _GlowButton(
                       label: 'ADD TO SESSION',
