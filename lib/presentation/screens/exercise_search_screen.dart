@@ -160,6 +160,9 @@ class _ExerciseSearchScreenState extends State<ExerciseSearchScreen> {
                               final exercise = provider.searchResults[index];
                               final routineExercise =
                                   _mapToRoutineExercise(exercise);
+                              final visual = _ExerciseVisualStyle.fromExercise(
+                                exercise,
+                              );
                               final isInRoutine = context
                                   .watch<RoutineProvider>()
                                   .isInRoutine(routineExercise.id);
@@ -184,15 +187,28 @@ class _ExerciseSearchScreenState extends State<ExerciseSearchScreen> {
                                     16,
                                     16,
                                   ),
-                                  title: Text(
-                                    exercise.name,
-                                    style: const TextStyle(
-                                      color: Colors.black87,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                                  title: Row(
+                                    children: [
+                                      _ExerciseThumbnail(
+                                        style: visual,
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Text(
+                                          exercise.name,
+                                          style: const TextStyle(
+                                            color: Colors.black87,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                   subtitle: Padding(
-                                    padding: const EdgeInsets.only(top: 8),
+                                    padding: const EdgeInsets.only(
+                                      top: 8,
+                                      left: 68,
+                                    ),
                                     child: Wrap(
                                       spacing: 8,
                                       runSpacing: 8,
@@ -386,5 +402,123 @@ class _InfoBlock extends StatelessWidget {
         ),
       ],
     );
+  }
+}
+
+class _ExerciseThumbnail extends StatelessWidget {
+  final _ExerciseVisualStyle style;
+
+  const _ExerciseThumbnail({
+    required this.style,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 56,
+      height: 56,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [style.primaryColor, style.secondaryColor],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: style.primaryColor.withValues(alpha: 0.24),
+            blurRadius: 12,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          Positioned(
+            right: -10,
+            bottom: -10,
+            child: Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+          Center(
+            child: Icon(
+              style.icon,
+              color: Colors.white,
+              size: 24,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ExerciseVisualStyle {
+  final IconData icon;
+  final Color primaryColor;
+  final Color secondaryColor;
+
+  const _ExerciseVisualStyle({
+    required this.icon,
+    required this.primaryColor,
+    required this.secondaryColor,
+  });
+
+  factory _ExerciseVisualStyle.fromExercise(ApiExercise exercise) {
+    final normalizedType = exercise.type.trim().toLowerCase();
+
+    switch (normalizedType) {
+      case 'strength':
+        return const _ExerciseVisualStyle(
+          icon: Icons.fitness_center,
+          primaryColor: Color(0xFF2563EB),
+          secondaryColor: Color(0xFF60A5FA),
+        );
+      case 'cardio':
+        return const _ExerciseVisualStyle(
+          icon: Icons.favorite,
+          primaryColor: Color(0xFFEF4444),
+          secondaryColor: Color(0xFFFB7185),
+        );
+      case 'stretching':
+      case 'flexibility':
+        return const _ExerciseVisualStyle(
+          icon: Icons.self_improvement,
+          primaryColor: Color(0xFF10B981),
+          secondaryColor: Color(0xFF6EE7B7),
+        );
+      case 'plyometrics':
+      case 'hiit':
+        return const _ExerciseVisualStyle(
+          icon: Icons.bolt,
+          primaryColor: Color(0xFFF97316),
+          secondaryColor: Color(0xFFFBBF24),
+        );
+      case 'strongman':
+        return const _ExerciseVisualStyle(
+          icon: Icons.hardware,
+          primaryColor: Color(0xFF7C2D12),
+          secondaryColor: Color(0xFFD97706),
+        );
+      case 'weightlifting':
+      case 'olympic_weightlifting':
+        return const _ExerciseVisualStyle(
+          icon: Icons.sports_gymnastics,
+          primaryColor: Color(0xFF7C3AED),
+          secondaryColor: Color(0xFFA78BFA),
+        );
+      default:
+        return const _ExerciseVisualStyle(
+          icon: Icons.sports_gymnastics,
+          primaryColor: Color(0xFF0F766E),
+          secondaryColor: Color(0xFF2DD4BF),
+        );
+    }
   }
 }
