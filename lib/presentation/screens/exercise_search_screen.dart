@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../data/models/api_exercise.dart';
 import '../../domain/exercise_search_provider.dart';
+import '../../domain/routine_provider.dart';
+import '../../models/exercise.dart';
 
 class ExerciseSearchScreen extends StatefulWidget {
   const ExerciseSearchScreen({super.key});
@@ -22,6 +25,41 @@ class _ExerciseSearchScreenState extends State<ExerciseSearchScreen> {
   void _submitSearch() {
     context.read<ExerciseSearchProvider>().searchExercises(
       _searchController.text,
+    );
+  }
+
+  Exercise _mapToRoutineExercise(ApiExercise apiExercise) {
+    final normalizedName = apiExercise.name
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9]+'), '_')
+        .replaceAll(RegExp(r'^_+|_+$'), '');
+    final normalizedMuscle = apiExercise.muscle
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9]+'), '_')
+        .replaceAll(RegExp(r'^_+|_+$'), '');
+    final normalizedType = apiExercise.type
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9]+'), '_')
+        .replaceAll(RegExp(r'^_+|_+$'), '');
+
+    return Exercise(
+      id: 'api_${normalizedType}_${normalizedMuscle}_$normalizedName',
+      name: apiExercise.name,
+      muscleGroup: apiExercise.muscle,
+      sets: 3,
+      reps: 10,
+      weight: 0,
+    );
+  }
+
+  void _addToRoutine(ApiExercise apiExercise) {
+    final routineExercise = _mapToRoutineExercise(apiExercise);
+    context.read<RoutineProvider>().addExercise(routineExercise);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('${apiExercise.name} added to routine'),
+        behavior: SnackBarBehavior.floating,
+      ),
     );
   }
 
@@ -120,6 +158,11 @@ class _ExerciseSearchScreenState extends State<ExerciseSearchScreen> {
                                 const SizedBox(height: 12),
                             itemBuilder: (context, index) {
                               final exercise = provider.searchResults[index];
+                              final routineExercise =
+                                  _mapToRoutineExercise(exercise);
+                              final isInRoutine = context
+                                  .watch<RoutineProvider>()
+                                  .isInRoutine(routineExercise.id);
                               return Container(
                                 decoration: BoxDecoration(
                                   color: Colors.white,
@@ -181,6 +224,25 @@ class _ExerciseSearchScreenState extends State<ExerciseSearchScreen> {
                                         value: exercise.safetyInfo,
                                       ),
                                     ],
+                                    const SizedBox(height: 16),
+                                    SizedBox(
+                                      width: double.infinity,
+                                      child: FilledButton.icon(
+                                        onPressed: isInRoutine
+                                            ? null
+                                            : () => _addToRoutine(exercise),
+                                        icon: Icon(
+                                          isInRoutine
+                                              ? Icons.check
+                                              : Icons.playlist_add_outlined,
+                                        ),
+                                        label: Text(
+                                          isInRoutine
+                                              ? 'Added to Routine'
+                                              : 'Add to Routine',
+                                        ),
+                                      ),
+                                    ),
                                   ],
                                 ),
                               );
