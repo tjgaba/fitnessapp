@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 
-import '../models/exercise.dart';
-import 'screens/add_exercise_screen.dart';
-import 'screens/assessment_screen.dart';
-import 'screens/bmi_calculator_screen.dart';
-import 'screens/exercise_browse_screen.dart';
-import 'screens/exercise_detail_screen.dart';
-import 'screens/exercise_list_screen.dart';
-import 'screens/exercise_search_screen.dart';
-import 'screens/home_screen.dart';
-import 'screens/outdoor_workout_history_screen.dart';
-import 'screens/outdoor_workout_screen.dart';
-import 'screens/routine_summary_screen.dart';
+import '../../models/exercise.dart';
+import '../screens/add_exercise_screen.dart';
+import '../screens/assessment_screen.dart';
+import '../screens/bmi_calculator_screen.dart';
+import '../screens/exercise_browse_screen.dart';
+import '../screens/exercise_detail_screen.dart';
+import '../screens/exercise_list_screen.dart';
+import '../screens/exercise_search_screen.dart';
+import '../screens/home_screen.dart';
+import '../screens/outdoor_workout_history_screen.dart';
+import '../screens/outdoor_workout_screen.dart';
+import '../screens/routine_summary_screen.dart';
 
 class AppRouter extends StatelessWidget {
   const AppRouter({super.key});
