@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../app_router.dart';
+import '../../data/category_data.dart';
 import '../../data/custom_exercise_store.dart';
 import '../../models/custom_exercise.dart';
 import '../../models/exercise.dart';
@@ -113,7 +114,7 @@ class _BrowseHeader extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             exerciseCount == 0
-                ? 'Browse the full exercise inventory across Strength, HIIT, Cardio, Flexibility, Weightlifting, and Strongman. Your custom exercises are included inside their chosen categories.'
+                ? 'Browse the full exercise inventory across Strength, Cardio, Stretching, Plyometrics, Weightlifting, and Strongman. Your custom exercises are included inside their chosen categories.'
                 : '$exerciseCount exercise(s) already in your routine. Tiles update automatically when items are added or removed.',
             style: const TextStyle(
               color: Colors.black54,
@@ -474,7 +475,7 @@ List<_ExerciseCategorySectionData> _buildCatalogSections(
 ) {
   return _baseCatalogSections.map((section) {
     final customEntries = customExercises
-        .where((exercise) => exercise.category == section.title)
+        .where((exercise) => categoryMatches(section.title, exercise.category))
         .map(
           (exercise) => _CatalogExerciseEntry(
             exercise: Exercise(
@@ -550,7 +551,7 @@ const List<_ExerciseCategorySectionData> _baseCatalogSections = [
     ],
   ),
   _ExerciseCategorySectionData(
-    title: 'HIIT',
+    title: 'Plyometrics',
     description: 'Explosive intervals that keep rest short and intensity high.',
     icon: Icons.flash_on,
     color: Colors.orangeAccent,
@@ -646,7 +647,7 @@ const List<_ExerciseCategorySectionData> _baseCatalogSections = [
     ],
   ),
   _ExerciseCategorySectionData(
-    title: 'Flexibility',
+    title: 'Stretching',
     description: 'Mobility and stretch work to improve range of motion.',
     icon: Icons.self_improvement,
     color: Colors.green,

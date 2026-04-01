@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../app_router.dart';
+import '../../data/category_data.dart';
 import '../../data/custom_exercise_store.dart';
+import '../../data/exercise_api_repository.dart';
+import '../../data/models/api_exercise.dart';
+import '../../domain/routine_provider.dart';
 import '../../models/custom_exercise.dart';
 import '../../models/exercise.dart';
-import '../../domain/routine_provider.dart';
+import '../app_router.dart';
 import '../widgets/app_drawer.dart';
 
-class ExerciseListScreen extends StatelessWidget {
+class ExerciseListScreen extends StatefulWidget {
   final String categoryName;
   final Color themeColor;
   final IconData iconData;
@@ -21,205 +24,126 @@ class ExerciseListScreen extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    final brightness = ThemeData.estimateBrightnessForColor(themeColor);
-    final foregroundColor =
-        brightness == Brightness.dark ? Colors.white : Colors.black;
-    final routineProvider = context.watch<RoutineProvider>();
+  State<ExerciseListScreen> createState() => _ExerciseListScreenState();
+}
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FB),
-      drawer: AppDrawer(
-        currentRouteName: AppRoute.exerciseList.name,
-        currentCategoryName: categoryName,
-      ),
-      appBar: AppBar(
-        backgroundColor: themeColor,
-        foregroundColor: foregroundColor,
-        elevation: 0,
-        title: Text('$categoryName Exercises'),
-        actions: const [DrawerBackAction()],
-      ),
-      body: ValueListenableBuilder<List<CustomExercise>>(
-        valueListenable: CustomExerciseStore.exercises,
-        builder: (context, customExercises, _) {
-          final exercises = _buildExercises(customExercises);
+class _ExerciseListScreenState extends State<ExerciseListScreen> {
+  late Future<List<_ExerciseItem>> _apiExercisesFuture;
 
-          return ListView.separated(
-            padding: const EdgeInsets.all(16),
-            itemCount: exercises.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
-            itemBuilder: (context, index) {
-              final entry = exercises[index];
-              final exercise = entry.exercise;
-              final isInRoutine = routineProvider.isInRoutine(exercise.id);
+  @override
+  void initState() {
+    super.initState();
+    _apiExercisesFuture = _loadApiExercises();
+  }
 
-              return Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(20),
-                  onTap: () {
-                    Navigator.of(context).pushRouteWithArgs(
-                      AppRoute.exerciseDetail,
-                      ExerciseDetailArgs(
-                        exercise: exercise,
-                        accentColor: themeColor,
-                      ),
-                    );
-                  },
-                  child: AnimatedOpacity(
-                    duration: const Duration(milliseconds: 180),
-                    opacity: isInRoutine ? 0.68 : 1,
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: isInRoutine
-                            ? Colors.green.withValues(alpha: 0.4)
-                            : themeColor.withValues(alpha: 0.28),
-                        width: 1.2,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: themeColor.withValues(alpha: 0.14),
-                          blurRadius: 12,
-                          spreadRadius: 1,
-                        ),
-                      ],
-                    ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 48,
-                            height: 48,
-                            decoration: BoxDecoration(
-                              color: themeColor.withValues(alpha: 0.1),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(iconData, color: themeColor),
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        exercise.name,
-                                        style: const TextStyle(
-                                          color: Colors.black87,
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                    if (entry.isCustom)
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 10,
-                                          vertical: 5,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: Colors.green.withValues(
-                                            alpha: 0.1,
-                                          ),
-                                          borderRadius: BorderRadius.circular(12),
-                                        ),
-                                        child: const Text(
-                                          'Custom',
-                                          style: TextStyle(
-                                            color: Colors.green,
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  exercise.muscleGroup,
-                                  style: const TextStyle(
-                                    color: Colors.black54,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  '${exercise.sets} sets | ${exercise.reps} reps | ${_formatWeight(exercise.weight)} kg',
-                                  style: TextStyle(
-                                    color: themeColor,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Estimated volume: ${_formatWeight(exercise.volume)} kg',
-                                  style: const TextStyle(
-                                    color: Colors.black45,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Column(
-                            children: [
-                              IconButton(
-                                tooltip: isInRoutine
-                                    ? 'Remove from routine'
-                                    : 'Add to routine',
-                                onPressed: () {
-                                  if (isInRoutine) {
-                                    context
-                                        .read<RoutineProvider>()
-                                        .removeExercise(exercise.id);
-                                  } else {
-                                    context
-                                        .read<RoutineProvider>()
-                                        .addExercise(exercise);
-                                  }
-                                },
-                                icon: Icon(
-                                  isInRoutine
-                                      ? Icons.check_circle
-                                      : Icons.playlist_add_circle_outlined,
-                                  color: isInRoutine
-                                      ? Colors.green
-                                      : themeColor,
-                                ),
-                              ),
-                              Icon(
-                                Icons.chevron_right_rounded,
-                                color: themeColor,
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            },
-          );
-        },
+  @override
+  void didUpdateWidget(covariant ExerciseListScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.categoryName != widget.categoryName) {
+      _apiExercisesFuture = _loadApiExercises();
+    }
+  }
+
+  Future<List<_ExerciseItem>> _loadApiExercises() async {
+    final apiType = apiTypeForCategory(widget.categoryName);
+    if (apiType.isEmpty) {
+      return const <_ExerciseItem>[];
+    }
+
+    final repository = context.read<ExerciseApiRepository>();
+    final apiExercises = await repository.searchExercises(type: apiType);
+
+    return apiExercises.map(_mapApiExercise).toList();
+  }
+
+  _ExerciseItem _mapApiExercise(ApiExercise apiExercise) {
+    final normalizedName = apiExercise.name
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9]+'), '_')
+        .replaceAll(RegExp(r'^_+|_+$'), '');
+    final normalizedMuscle = apiExercise.muscle
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9]+'), '_')
+        .replaceAll(RegExp(r'^_+|_+$'), '');
+    final normalizedType = apiExercise.type
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9]+'), '_')
+        .replaceAll(RegExp(r'^_+|_+$'), '');
+
+    return _ExerciseItem(
+      exercise: Exercise(
+        id: 'api_${normalizedType}_${normalizedMuscle}_$normalizedName',
+        name: apiExercise.name,
+        muscleGroup: apiExercise.muscle.isEmpty ? 'Unknown' : apiExercise.muscle,
+        sets: _estimatedSets(apiExercise.difficulty),
+        reps: _estimatedReps(apiExercise.type),
+        weight: 0,
+        instructions: apiExercise.instructions,
+        safetyInfo: apiExercise.safetyInfo,
+        equipments: apiExercise.equipments,
       ),
+      badgeLabel: 'API',
+      badgeColor: widget.themeColor,
+      supportingText: _buildSupportingText(apiExercise),
     );
   }
 
-  List<_ExerciseItem> _buildExercises(List<CustomExercise> customExercises) {
-    final baseExercises = List<_ExerciseItem>.from(
-      _exerciseLibrary[categoryName] ?? _fallbackExercises,
-    );
-    final matchingCustomExercises = customExercises
-        .where((exercise) => exercise.category == categoryName)
+  String _buildSupportingText(ApiExercise apiExercise) {
+    final details = <String>[];
+    if (apiExercise.difficulty.isNotEmpty) {
+      details.add(_formatLabel(apiExercise.difficulty));
+    }
+    if (apiExercise.equipments.isNotEmpty) {
+      details.add(apiExercise.equipments.first);
+    }
+    return details.join(' | ');
+  }
+
+  int _estimatedSets(String difficulty) {
+    switch (difficulty.trim().toLowerCase()) {
+      case 'beginner':
+        return 2;
+      case 'expert':
+        return 4;
+      default:
+        return 3;
+    }
+  }
+
+  int _estimatedReps(String type) {
+    switch (type.trim().toLowerCase()) {
+      case 'cardio':
+      case 'stretching':
+        return 12;
+      case 'strongman':
+      case 'weightlifting':
+        return 6;
+      default:
+        return 10;
+    }
+  }
+
+  String _formatLabel(String value) {
+    if (value.isEmpty) {
+      return value;
+    }
+
+    return value
+        .split('_')
+        .map(
+          (segment) => segment.isEmpty
+              ? segment
+              : '${segment[0].toUpperCase()}${segment.substring(1)}',
+        )
+        .join(' ');
+  }
+
+  List<_ExerciseItem> _mergeExercises(
+    List<CustomExercise> customExercises,
+    List<_ExerciseItem> apiExercises,
+  ) {
+    final customEntries = customExercises
+        .where((exercise) => categoryMatches(widget.categoryName, exercise.category))
         .map(
           (exercise) => _ExerciseItem(
             exercise: Exercise(
@@ -230,11 +154,282 @@ class ExerciseListScreen extends StatelessWidget {
               reps: exercise.reps,
               weight: exercise.weight,
             ),
+            badgeLabel: 'Custom',
+            badgeColor: Colors.green,
+            supportingText: exercise.intensity,
             isCustom: true,
           ),
-        );
+        )
+        .toList();
 
-    return [...matchingCustomExercises, ...baseExercises];
+    return <_ExerciseItem>[...customEntries, ...apiExercises];
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final brightness = ThemeData.estimateBrightnessForColor(widget.themeColor);
+    final foregroundColor =
+        brightness == Brightness.dark ? Colors.white : Colors.black;
+    final routineProvider = context.watch<RoutineProvider>();
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFF5F7FB),
+      drawer: AppDrawer(
+        currentRouteName: AppRoute.exerciseList.name,
+        currentCategoryName: widget.categoryName,
+      ),
+      appBar: AppBar(
+        backgroundColor: widget.themeColor,
+        foregroundColor: foregroundColor,
+        elevation: 0,
+        title: Text('${widget.categoryName} Exercises'),
+        actions: const [DrawerBackAction()],
+      ),
+      body: ValueListenableBuilder<List<CustomExercise>>(
+        valueListenable: CustomExerciseStore.exercises,
+        builder: (context, customExercises, _) {
+          return FutureBuilder<List<_ExerciseItem>>(
+            future: _apiExercisesFuture,
+            builder: (context, snapshot) {
+              final apiExercises = snapshot.data ?? const <_ExerciseItem>[];
+              final exercises = _mergeExercises(customExercises, apiExercises);
+
+              if (snapshot.connectionState == ConnectionState.waiting &&
+                  apiExercises.isEmpty &&
+                  customExercises.isEmpty) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              if (snapshot.hasError && exercises.isEmpty) {
+                return _CategoryErrorState(
+                  categoryName: widget.categoryName,
+                  themeColor: widget.themeColor,
+                  errorMessage: snapshot.error.toString().replaceFirst(
+                    'Exception: ',
+                    '',
+                  ),
+                  onRetry: () {
+                    setState(() {
+                      _apiExercisesFuture = _loadApiExercises();
+                    });
+                  },
+                );
+              }
+
+              if (exercises.isEmpty) {
+                return _EmptyCategoryState(categoryName: widget.categoryName);
+              }
+
+              return Column(
+                children: [
+                  if (snapshot.hasError)
+                    _InlineWarningBanner(
+                      themeColor: widget.themeColor,
+                      message:
+                          'API data could not be refreshed. Showing only your custom exercises for now.',
+                      onRetry: () {
+                        setState(() {
+                          _apiExercisesFuture = _loadApiExercises();
+                        });
+                      },
+                    ),
+                  Expanded(
+                    child: ListView.separated(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: exercises.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 12),
+                      itemBuilder: (context, index) {
+                        final entry = exercises[index];
+                        final exercise = entry.exercise;
+                        final isInRoutine =
+                            routineProvider.isInRoutine(exercise.id);
+
+                        return Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(20),
+                            onTap: () {
+                              Navigator.of(context).pushRouteWithArgs(
+                                AppRoute.exerciseDetail,
+                                ExerciseDetailArgs(
+                                  exercise: exercise,
+                                  accentColor: widget.themeColor,
+                                ),
+                              );
+                            },
+                            child: AnimatedOpacity(
+                              duration: const Duration(milliseconds: 180),
+                              opacity: isInRoutine ? 0.68 : 1,
+                              child: Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: isInRoutine
+                                        ? Colors.green.withValues(alpha: 0.4)
+                                        : widget.themeColor.withValues(alpha: 0.28),
+                                    width: 1.2,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: widget.themeColor.withValues(
+                                        alpha: 0.14,
+                                      ),
+                                      blurRadius: 12,
+                                      spreadRadius: 1,
+                                    ),
+                                  ],
+                                ),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 48,
+                                      height: 48,
+                                      decoration: BoxDecoration(
+                                        color: widget.themeColor.withValues(
+                                          alpha: 0.1,
+                                        ),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Icon(
+                                        widget.iconData,
+                                        color: widget.themeColor,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 14),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            children: [
+                                              Expanded(
+                                                child: Text(
+                                                  exercise.name,
+                                                  style: const TextStyle(
+                                                    color: Colors.black87,
+                                                    fontSize: 15,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ),
+                                              if (entry.badgeLabel != null)
+                                                Container(
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                    horizontal: 10,
+                                                    vertical: 5,
+                                                  ),
+                                                  decoration: BoxDecoration(
+                                                    color: entry.badgeColor
+                                                        .withValues(alpha: 0.1),
+                                                    borderRadius:
+                                                        BorderRadius.circular(12),
+                                                  ),
+                                                  child: Text(
+                                                    entry.badgeLabel!,
+                                                    style: TextStyle(
+                                                      color: entry.badgeColor,
+                                                      fontSize: 11,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            exercise.muscleGroup,
+                                            style: const TextStyle(
+                                              color: Colors.black54,
+                                              fontSize: 13,
+                                            ),
+                                          ),
+                                          if (entry.supportingText.isNotEmpty) ...[
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              entry.supportingText,
+                                              style: TextStyle(
+                                                color: entry.isCustom
+                                                    ? Colors.green
+                                                    : widget.themeColor,
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                          ],
+                                          const SizedBox(height: 6),
+                                          Text(
+                                            '${exercise.sets} sets | ${exercise.reps} reps | ${_formatWeight(exercise.weight)} kg',
+                                            style: TextStyle(
+                                              color: widget.themeColor,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            'Estimated volume: ${_formatWeight(exercise.volume)} kg',
+                                            style: const TextStyle(
+                                              color: Colors.black45,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Column(
+                                      children: [
+                                        IconButton(
+                                          tooltip: isInRoutine
+                                              ? 'Remove from routine'
+                                              : 'Add to routine',
+                                          onPressed: () {
+                                            if (isInRoutine) {
+                                              context
+                                                  .read<RoutineProvider>()
+                                                  .removeExercise(exercise.id);
+                                            } else {
+                                              context
+                                                  .read<RoutineProvider>()
+                                                  .addExercise(exercise);
+                                            }
+                                          },
+                                          icon: Icon(
+                                            isInRoutine
+                                                ? Icons.check_circle
+                                                : Icons
+                                                    .playlist_add_circle_outlined,
+                                            color: isInRoutine
+                                                ? Colors.green
+                                                : widget.themeColor,
+                                          ),
+                                        ),
+                                        Icon(
+                                          Icons.chevron_right_rounded,
+                                          color: widget.themeColor,
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              );
+            },
+          );
+        },
+      ),
+    );
   }
 
   String _formatWeight(double value) {
@@ -248,309 +443,141 @@ class ExerciseListScreen extends StatelessWidget {
 class _ExerciseItem {
   final Exercise exercise;
   final bool isCustom;
+  final String? badgeLabel;
+  final Color badgeColor;
+  final String supportingText;
 
   const _ExerciseItem({
     required this.exercise,
     this.isCustom = false,
+    this.badgeLabel,
+    this.badgeColor = Colors.blueAccent,
+    this.supportingText = '',
   });
 }
 
-const List<_ExerciseItem> _fallbackExercises = [
-  _ExerciseItem(
-    exercise: Exercise(
-      id: 'fallback_bodyweight_squat_01',
-      name: 'Bodyweight Squat',
-      muscleGroup: 'Legs',
-      sets: 3,
-      reps: 12,
-      weight: 0,
-    ),
-  ),
-  _ExerciseItem(
-    exercise: Exercise(
-      id: 'fallback_push_up_01',
-      name: 'Push-Up',
-      muscleGroup: 'Chest',
-      sets: 3,
-      reps: 15,
-      weight: 0,
-    ),
-  ),
-  _ExerciseItem(
-    exercise: Exercise(
-      id: 'fallback_mountain_climber_01',
-      name: 'Mountain Climber',
-      muscleGroup: 'Core',
-      sets: 4,
-      reps: 20,
-      weight: 0,
-    ),
-  ),
-  _ExerciseItem(
-    exercise: Exercise(
-      id: 'fallback_walking_lunge_01',
-      name: 'Walking Lunge',
-      muscleGroup: 'Legs',
-      sets: 3,
-      reps: 12,
-      weight: 8,
-    ),
-  ),
-];
+class _InlineWarningBanner extends StatelessWidget {
+  final Color themeColor;
+  final String message;
+  final VoidCallback onRetry;
 
-const Map<String, List<_ExerciseItem>> _exerciseLibrary = {
-  'Strength': [
-    _ExerciseItem(
-      exercise: Exercise(
-        id: 'strength_barbell_squat_01',
-        name: 'Barbell Squat',
-        muscleGroup: 'Legs',
-        sets: 4,
-        reps: 8,
-        weight: 80,
-      ),
-    ),
-    _ExerciseItem(
-      exercise: Exercise(
-        id: 'strength_bench_press_01',
-        name: 'Bench Press',
-        muscleGroup: 'Chest',
-        sets: 4,
-        reps: 10,
-        weight: 60,
-      ),
-    ),
-    _ExerciseItem(
-      exercise: Exercise(
-        id: 'strength_deadlift_01',
-        name: 'Deadlift',
-        muscleGroup: 'Back',
-        sets: 4,
-        reps: 6,
-        weight: 100,
-      ),
-    ),
-    _ExerciseItem(
-      exercise: Exercise(
-        id: 'strength_shoulder_press_01',
-        name: 'Shoulder Press',
-        muscleGroup: 'Shoulders',
-        sets: 3,
-        reps: 10,
-        weight: 24,
-      ),
-    ),
-  ],
-  'HIIT': [
-    _ExerciseItem(
-      exercise: Exercise(
-        id: 'hiit_burpee_01',
-        name: 'Burpees',
-        muscleGroup: 'Full Body',
-        sets: 5,
-        reps: 12,
-        weight: 0,
-      ),
-    ),
-    _ExerciseItem(
-      exercise: Exercise(
-        id: 'hiit_kettlebell_swing_01',
-        name: 'Kettlebell Swing',
-        muscleGroup: 'Posterior Chain',
-        sets: 4,
-        reps: 20,
-        weight: 16,
-      ),
-    ),
-    _ExerciseItem(
-      exercise: Exercise(
-        id: 'hiit_jump_squat_01',
-        name: 'Jump Squat',
-        muscleGroup: 'Legs',
-        sets: 4,
-        reps: 15,
-        weight: 0,
-      ),
-    ),
-    _ExerciseItem(
-      exercise: Exercise(
-        id: 'hiit_battle_rope_slams_01',
-        name: 'Battle Rope Slams',
-        muscleGroup: 'Arms',
-        sets: 6,
-        reps: 20,
-        weight: 12,
-      ),
-    ),
-  ],
-  'Cardio': [
-    _ExerciseItem(
-      exercise: Exercise(
-        id: 'cardio_treadmill_run_01',
-        name: 'Treadmill Run',
-        muscleGroup: 'Legs',
-        sets: 1,
-        reps: 30,
-        weight: 0,
-      ),
-    ),
-    _ExerciseItem(
-      exercise: Exercise(
-        id: 'cardio_cycling_sprint_01',
-        name: 'Cycling Sprint',
-        muscleGroup: 'Legs',
-        sets: 6,
-        reps: 5,
-        weight: 0,
-      ),
-    ),
-    _ExerciseItem(
-      exercise: Exercise(
-        id: 'cardio_rowing_machine_01',
-        name: 'Rowing Machine',
-        muscleGroup: 'Back',
-        sets: 3,
-        reps: 12,
-        weight: 18,
-      ),
-    ),
-    _ExerciseItem(
-      exercise: Exercise(
-        id: 'cardio_stair_climber_01',
-        name: 'Stair Climber',
-        muscleGroup: 'Glutes',
-        sets: 4,
-        reps: 10,
-        weight: 0,
-      ),
-    ),
-  ],
-  'Flexibility': [
-    _ExerciseItem(
-      exercise: Exercise(
-        id: 'flexibility_hamstring_stretch_01',
-        name: 'Hamstring Stretch',
-        muscleGroup: 'Hamstrings',
-        sets: 3,
-        reps: 30,
-        weight: 0,
-      ),
-    ),
-    _ExerciseItem(
-      exercise: Exercise(
-        id: 'flexibility_cat_cow_flow_01',
-        name: 'Cat-Cow Flow',
-        muscleGroup: 'Spine',
-        sets: 3,
-        reps: 12,
-        weight: 0,
-      ),
-    ),
-    _ExerciseItem(
-      exercise: Exercise(
-        id: 'flexibility_hip_flexor_stretch_01',
-        name: 'Hip Flexor Stretch',
-        muscleGroup: 'Hips',
-        sets: 3,
-        reps: 30,
-        weight: 0,
-      ),
-    ),
-    _ExerciseItem(
-      exercise: Exercise(
-        id: 'flexibility_child_pose_reach_01',
-        name: 'Child Pose Reach',
-        muscleGroup: 'Back',
-        sets: 4,
-        reps: 20,
-        weight: 0,
-      ),
-    ),
-  ],
-  'Weightlifting': [
-    _ExerciseItem(
-      exercise: Exercise(
-        id: 'weightlifting_power_clean_01',
-        name: 'Power Clean',
-        muscleGroup: 'Full Body',
-        sets: 5,
-        reps: 3,
-        weight: 70,
-      ),
-    ),
-    _ExerciseItem(
-      exercise: Exercise(
-        id: 'weightlifting_hang_snatch_01',
-        name: 'Hang Snatch',
-        muscleGroup: 'Shoulders',
-        sets: 4,
-        reps: 3,
-        weight: 45,
-      ),
-    ),
-    _ExerciseItem(
-      exercise: Exercise(
-        id: 'weightlifting_push_jerk_01',
-        name: 'Push Jerk',
-        muscleGroup: 'Shoulders',
-        sets: 5,
-        reps: 2,
-        weight: 60,
-      ),
-    ),
-    _ExerciseItem(
-      exercise: Exercise(
-        id: 'weightlifting_front_squat_01',
-        name: 'Front Squat',
-        muscleGroup: 'Quadriceps',
-        sets: 4,
-        reps: 5,
-        weight: 85,
-      ),
-    ),
-  ],
-  'Strongman': [
-    _ExerciseItem(
-      exercise: Exercise(
-        id: 'strongman_farmers_carry_01',
-        name: "Farmer's Carry",
-        muscleGroup: 'Forearms',
-        sets: 4,
-        reps: 30,
-        weight: 40,
-      ),
-    ),
-    _ExerciseItem(
-      exercise: Exercise(
-        id: 'strongman_atlas_stone_load_01',
-        name: 'Atlas Stone Load',
-        muscleGroup: 'Lower Back',
-        sets: 5,
-        reps: 4,
-        weight: 75,
-      ),
-    ),
-    _ExerciseItem(
-      exercise: Exercise(
-        id: 'strongman_yoke_walk_01',
-        name: 'Yoke Walk',
-        muscleGroup: 'Full Body',
-        sets: 4,
-        reps: 20,
-        weight: 140,
-      ),
-    ),
-    _ExerciseItem(
-      exercise: Exercise(
-        id: 'strongman_log_press_01',
-        name: 'Log Press',
-        muscleGroup: 'Shoulders',
-        sets: 4,
-        reps: 6,
-        weight: 55,
-      ),
-    ),
-  ],
-};
+  const _InlineWarningBanner({
+    required this.themeColor,
+    required this.message,
+    required this.onRetry,
+  });
 
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: themeColor.withValues(alpha: 0.22)),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.info_outline, color: themeColor),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                message,
+                style: const TextStyle(
+                  color: Colors.black54,
+                  fontSize: 12,
+                  height: 1.4,
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            TextButton(
+              onPressed: onRetry,
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
+class _CategoryErrorState extends StatelessWidget {
+  final String categoryName;
+  final Color themeColor;
+  final String errorMessage;
+  final VoidCallback onRetry;
+
+  const _CategoryErrorState({
+    required this.categoryName,
+    required this.themeColor,
+    required this.errorMessage,
+    required this.onRetry,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.cloud_off, color: themeColor, size: 40),
+            const SizedBox(height: 12),
+            Text(
+              'Failed to load $categoryName exercises.',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Colors.black87,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              errorMessage,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Colors.black54,
+                fontSize: 13,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 16),
+            FilledButton(
+              onPressed: onRetry,
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _EmptyCategoryState extends StatelessWidget {
+  final String categoryName;
+
+  const _EmptyCategoryState({required this.categoryName});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Text(
+          'No exercises are available for $categoryName yet.',
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            color: Colors.black54,
+            fontSize: 14,
+            height: 1.5,
+          ),
+        ),
+      ),
+    );
+  }
+}

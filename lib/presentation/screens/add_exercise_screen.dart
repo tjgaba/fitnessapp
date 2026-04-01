@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../data/category_data.dart';
 import '../app_router.dart';
 import '../../models/custom_exercise.dart';
 import '../widgets/app_drawer.dart';
@@ -168,15 +169,14 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
                     ),
                   ),
                   hint: const Text('Select workout category...'),
-                  items: const [
-                    DropdownMenuItem(value: 'Strength', child: Text('Strength')),
-                    DropdownMenuItem(value: 'Cardio', child: Text('Cardio')),
-                    DropdownMenuItem(
-                      value: 'Flexibility',
-                      child: Text('Flexibility'),
-                    ),
-                    DropdownMenuItem(value: 'HIIT', child: Text('HIIT')),
-                  ],
+                  items: appCategories
+                      .map(
+                        (category) => DropdownMenuItem<String>(
+                          value: category.title,
+                          child: Text(category.title),
+                        ),
+                      )
+                      .toList(),
                   onChanged: (value) {
                     setState(() => _selectedCategory = value);
                   },
