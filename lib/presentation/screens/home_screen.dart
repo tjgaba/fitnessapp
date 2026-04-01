@@ -82,7 +82,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _openAddExerciseScreen,
         icon: const Icon(Icons.add),
@@ -219,6 +218,27 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ],
           ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.tonalIcon(
+              onPressed: () =>
+                  Navigator.of(context).pushRoute(AppRoute.outdoorWorkout),
+              icon: const Icon(Icons.route_rounded),
+              label: const Text('Track Outdoor Workout'),
+            ),
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () => Navigator.of(
+                context,
+              ).pushRoute(AppRoute.outdoorWorkoutHistory),
+              icon: const Icon(Icons.history_rounded),
+              label: const Text('Outdoor Workout History'),
+            ),
+          ),
         ],
       ),
     );
@@ -246,8 +266,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ],
           ),
-
-
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -381,7 +399,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildExerciseTile(CustomExercise exercise) {
-    // CustomExerciseStore Data
     final muscleGroup = exercise.muscleGroup;
     final category = exercise.category;
     final intensity = exercise.intensity;

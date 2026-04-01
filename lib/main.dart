@@ -4,9 +4,11 @@ import 'package:provider/provider.dart';
 import 'data/profile_repository.dart';
 import 'data/routine_repository.dart';
 import 'data/exercise_api_repository.dart';
+import 'data/location_service.dart';
 import 'domain/exercise_search_provider.dart';
 import 'domain/profile_provider.dart';
 import 'domain/routine_provider.dart';
+import 'domain/workout_tracking_provider.dart';
 import 'presentation/app_router.dart';
 
 void main() {
@@ -23,6 +25,7 @@ class FitnessApp extends StatelessWidget {
         Provider<ProfileRepository>(create: (_) => ProfileRepository()),
         Provider<RoutineRepository>(create: (_) => RoutineRepository()),
         Provider<ExerciseApiRepository>(create: (_) => ExerciseApiRepository()),
+        Provider<LocationService>(create: (_) => LocationService()),
         ChangeNotifierProvider(
           create: (context) =>
               ProfileProvider(context.read<ProfileRepository>()),
@@ -34,6 +37,11 @@ class FitnessApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (context) => ExerciseSearchProvider(
             context.read<ExerciseApiRepository>(),
+          ),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => WorkoutTrackingProvider(
+            context.read<LocationService>(),
           ),
         ),
       ],

@@ -8,8 +8,10 @@ import 'screens/exercise_browse_screen.dart';
 import 'screens/exercise_detail_screen.dart';
 import 'screens/exercise_list_screen.dart';
 import 'screens/exercise_search_screen.dart';
+import 'screens/home_screen.dart';
+import 'screens/outdoor_workout_history_screen.dart';
+import 'screens/outdoor_workout_screen.dart';
 import 'screens/routine_summary_screen.dart';
-import 'tabs/homescreen.dart';
 
 class AppRouter extends StatelessWidget {
   const AppRouter({super.key});
@@ -50,6 +52,8 @@ enum AppRoute<T> {
   exerciseDetail<ExerciseDetailArgs>('/exercise-detail'),
   exerciseBrowse<void>('/exercise-browse'),
   exerciseSearch<void>('/exercise-search'),
+  outdoorWorkout<void>('/outdoor-workout'),
+  outdoorWorkoutHistory<void>('/outdoor-workout-history'),
   routineSummary<void>('/routine-summary'),
   addExercise<void>('/add-exercise'),
   bmi<void>('/bmi'),
@@ -84,6 +88,12 @@ enum AppRoute<T> {
 
       case AppRoute.exerciseSearch:
         return const ExerciseSearchScreen();
+
+      case AppRoute.outdoorWorkout:
+        return const OutdoorWorkoutScreen();
+
+      case AppRoute.outdoorWorkoutHistory:
+        return const OutdoorWorkoutHistoryScreen();
 
       case AppRoute.routineSummary:
         return const RoutineSummaryScreen();
