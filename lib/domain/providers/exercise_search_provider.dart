@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 
-import '../data/exercise_api_repository.dart';
-import '../data/models/api_exercise.dart';
+import '../../data/repositories/exercise_api_repository.dart';
+import '../../data/models/api_exercise.dart';
 
 class ExerciseSearchProvider extends ChangeNotifier {
   final ExerciseApiRepository _repository;

@@ -1,6 +1,6 @@
 import r'package:flutter/material.dart';
 
-import '../models/workout_category.dart';
+import '../../models/workout_category.dart';
 
 class ExerciseCategoryDefinition {
   final String apiType;

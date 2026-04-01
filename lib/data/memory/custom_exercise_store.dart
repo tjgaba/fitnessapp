@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 
-import '../models/custom_exercise.dart';
+import '../../models/custom_exercise.dart';
 
 class CustomExerciseStore {
   CustomExerciseStore._();

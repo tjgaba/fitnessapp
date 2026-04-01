@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../data/category_data.dart';
+import '../../data/reference/exercise_category_data.dart';
 import '../../data/models/api_exercise.dart';
-import '../../domain/exercise_search_provider.dart';
-import '../../domain/routine_provider.dart';
+import '../../domain/providers/exercise_search_provider.dart';
+import '../../domain/providers/routine_provider.dart';
 import '../../models/exercise.dart';
 
 class ExerciseSearchScreen extends StatefulWidget {

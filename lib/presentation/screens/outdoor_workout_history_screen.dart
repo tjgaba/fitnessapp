@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
 
-import '../../domain/workout_tracking_provider.dart';
+import '../../domain/providers/workout_tracking_provider.dart';
 import '../../models/outdoor_workout_record.dart';
-import '../app_router.dart';
+import '../navigation/app_router.dart';
 import '../widgets/app_drawer.dart';
 
 class OutdoorWorkoutHistoryScreen extends StatefulWidget {

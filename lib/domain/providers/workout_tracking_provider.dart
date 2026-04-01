@@ -5,8 +5,8 @@ import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../data/location_service.dart';
-import '../models/outdoor_workout_record.dart';
+import '../../data/services/location_service.dart';
+import '../../models/outdoor_workout_record.dart';
 
 enum WorkoutPhase { idle, active, finished }
 

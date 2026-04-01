@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../app_router.dart';
-import '../../data/category_data.dart';
+import '../navigation/app_router.dart';
+import '../../data/reference/exercise_category_data.dart';
 import '../../models/workout_category.dart';
 
 class AppDrawer extends StatelessWidget {

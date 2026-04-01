@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../models/exercise.dart';
+import '../../models/exercise.dart';
 
 class RoutineRepository {
   static const String _key = 'exercise_routine';

@@ -1,4 +1,4 @@
-import '../data/met_values.dart';
+import '../data/reference/met_values.dart';
 
 /// Calories Burned = MET × weight (kg) × duration (hours)
 double estimateCaloriesBurned({

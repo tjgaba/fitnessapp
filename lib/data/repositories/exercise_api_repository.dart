@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 
-import 'models/api_exercise.dart';
+import '../models/api_exercise.dart';
 
 class ExerciseApiRepository {
   static const String _baseUrl = 'https://api.api-ninjas.com/v1/exercises';

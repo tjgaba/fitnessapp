@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 
-import '../models/category_session.dart';
-import '../models/workout_category.dart';
+import '../../models/category_session.dart';
+import '../../models/workout_category.dart';
 
 class CategorySessionStore {
   CategorySessionStore._();

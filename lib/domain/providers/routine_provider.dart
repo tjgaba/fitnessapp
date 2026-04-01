@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 
-import '../data/routine_repository.dart';
-import '../models/exercise.dart';
+import '../../data/repositories/routine_repository.dart';
+import '../../models/exercise.dart';
 
 class RoutineProvider extends ChangeNotifier {
   final RoutineRepository _repository;

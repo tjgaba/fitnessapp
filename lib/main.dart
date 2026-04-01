@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'data/profile_repository.dart';
-import 'data/routine_repository.dart';
-import 'data/exercise_api_repository.dart';
-import 'data/location_service.dart';
-import 'domain/exercise_search_provider.dart';
-import 'domain/profile_provider.dart';
-import 'domain/routine_provider.dart';
-import 'domain/workout_tracking_provider.dart';
-import 'presentation/app_router.dart';
+import 'data/repositories/profile_repository.dart';
+import 'data/repositories/routine_repository.dart';
+import 'data/repositories/exercise_api_repository.dart';
+import 'data/services/location_service.dart';
+import 'domain/providers/exercise_search_provider.dart';
+import 'domain/providers/profile_provider.dart';
+import 'domain/providers/routine_provider.dart';
+import 'domain/providers/workout_tracking_provider.dart';
+import 'presentation/navigation/app_router.dart';
 
 void main() {
   runApp(const FitnessApp());

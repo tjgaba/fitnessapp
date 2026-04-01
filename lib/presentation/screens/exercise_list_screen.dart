@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../data/category_data.dart';
-import '../../data/custom_exercise_store.dart';
-import '../../data/exercise_api_repository.dart';
+import '../../data/reference/exercise_category_data.dart';
+import '../../data/memory/custom_exercise_store.dart';
+import '../../data/repositories/exercise_api_repository.dart';
 import '../../data/models/api_exercise.dart';
-import '../../domain/routine_provider.dart';
+import '../../domain/providers/routine_provider.dart';
 import '../../models/custom_exercise.dart';
 import '../../models/exercise.dart';
-import '../app_router.dart';
+import '../navigation/app_router.dart';
 import '../widgets/app_drawer.dart';
 
 class ExerciseListScreen extends StatefulWidget {

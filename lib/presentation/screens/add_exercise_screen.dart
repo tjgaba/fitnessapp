@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../data/category_data.dart';
-import '../app_router.dart';
+import '../../data/reference/exercise_category_data.dart';
+import '../navigation/app_router.dart';
 import '../../models/custom_exercise.dart';
 import '../widgets/app_drawer.dart';
 

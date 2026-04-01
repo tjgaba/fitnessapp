@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../app_router.dart';
-import '../../domain/profile_provider.dart';
-import '../../domain/routine_provider.dart';
+import '../navigation/app_router.dart';
+import '../../domain/providers/profile_provider.dart';
+import '../../domain/providers/routine_provider.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/metric_card.dart';
 import '../widgets/profile_completeness.dart';

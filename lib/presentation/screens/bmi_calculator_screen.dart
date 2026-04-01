@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../app_router.dart';
+import '../navigation/app_router.dart';
 import '../../utils/bmi_calculator.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/bmi_calculate_button.dart';

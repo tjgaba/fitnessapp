@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../app_router.dart';
+import '../navigation/app_router.dart';
 import '../../models/workout_category.dart';
 
 /// Tappable tile for a workout category.

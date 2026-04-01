@@ -5,8 +5,8 @@ import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../domain/workout_tracking_provider.dart';
-import '../app_router.dart';
+import '../../domain/providers/workout_tracking_provider.dart';
+import '../navigation/app_router.dart';
 import '../widgets/app_drawer.dart';
 
 class OutdoorWorkoutScreen extends StatelessWidget {

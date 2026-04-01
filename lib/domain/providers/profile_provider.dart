@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 
-import '../data/profile_repository.dart';
-import '../models/user_profile.dart';
-import '../utils/bmi_calculator.dart';
+import '../../data/repositories/profile_repository.dart';
+import '../../models/user_profile.dart';
+import '../../utils/bmi_calculator.dart';
 
 class ProfileProvider extends ChangeNotifier {
   static const Set<String> _allowedGenders = {
