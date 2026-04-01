@@ -49,6 +49,7 @@ class WorkoutTrackingProvider extends ChangeNotifier {
   List<Position> get routePoints => List<Position>.unmodifiable(_routePoints);
   List<OutdoorWorkoutRecord> get history =>
       List<OutdoorWorkoutRecord>.unmodifiable(_history);
+  int get routePointCount => _routePoints.length;
   bool get canFinish => _workoutPhase == WorkoutPhase.active;
   bool get hasRoutePoints => _routePoints.isNotEmpty;
   bool get hasHistory => _history.isNotEmpty;

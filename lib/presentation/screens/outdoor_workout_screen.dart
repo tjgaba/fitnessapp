@@ -225,7 +225,7 @@ class _ActivePhase extends StatelessWidget {
                   ),
                   _MetricTile(
                     label: 'GPS Points',
-                    value: '${provider.routePoints.length}',
+                    value: '${provider.routePointCount}',
                   ),
                   _MetricTile(
                     label: 'Phase',
@@ -348,7 +348,7 @@ class _FinishedPhase extends StatelessWidget {
                       const SizedBox(height: 10),
                       _SummaryLine(
                         label: 'GPS Points Recorded',
-                        value: '${provider.routePoints.length}',
+                        value: '${provider.routePointCount}',
                       ),
                     ],
                   );
@@ -384,7 +384,7 @@ class _FinishedPhase extends StatelessWidget {
             ],
           ),
         ),
-        if (provider.routePoints.length >= 2) ...[
+        if (provider.routePointCount >= 2) ...[
           const SizedBox(height: 16),
           _PhaseCard(
             child: Column(
