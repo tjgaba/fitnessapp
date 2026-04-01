@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../data/category_data.dart';
 import '../../data/models/api_exercise.dart';
 import '../../domain/exercise_search_provider.dart';
 import '../../domain/routine_provider.dart';
@@ -14,14 +15,6 @@ class ExerciseSearchScreen extends StatefulWidget {
 }
 
 class _ExerciseSearchScreenState extends State<ExerciseSearchScreen> {
-  static const List<String> _exerciseTypes = <String>[
-    'strength',
-    'cardio',
-    'stretching',
-    'plyometrics',
-    'strongman',
-    'weightlifting',
-  ];
   static const Map<String, List<String>> _musclesByType =
       <String, List<String>>{
         'strength': <String>[
@@ -111,6 +104,9 @@ class _ExerciseSearchScreenState extends State<ExerciseSearchScreen> {
       sets: 3,
       reps: 10,
       weight: 0,
+      instructions: apiExercise.instructions,
+      safetyInfo: apiExercise.safetyInfo,
+      equipments: apiExercise.equipments,
     );
   }
 
@@ -150,7 +146,7 @@ class _ExerciseSearchScreenState extends State<ExerciseSearchScreen> {
                     Expanded(
                       child: DropdownButtonFormField<String>(
                         value: _selectedType,
-                        items: _exerciseTypes
+                        items: apiExerciseTypes
                             .map(
                               (type) => DropdownMenuItem<String>(
                                 value: type,

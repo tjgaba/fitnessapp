@@ -4,7 +4,7 @@ import 'models/api_exercise.dart';
 
 class ExerciseApiRepository {
   static const String _baseUrl = 'https://api.api-ninjas.com/v1/exercises';
-  static const String _apiKey = 'YOUR_KEY_HERE';
+  static const String _apiKey = '2fqUK0OjK3e2uOiwiHDvCDIRidHv8gSrvVsm6P6T';
 
   final Dio _dio = Dio();
 

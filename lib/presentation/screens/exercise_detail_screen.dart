@@ -88,9 +88,72 @@ class ExerciseDetailScreen extends StatelessWidget {
                   label: 'Weight',
                   value: '${_formatWeight(exercise.weight)} kg',
                 ),
+                if (exercise.equipments.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  _DetailRow(
+                    label: 'Equipment',
+                    value: exercise.equipments.join(', '),
+                  ),
+                ],
               ],
             ),
           ),
+          if (exercise.instructions.isNotEmpty) ...[
+            const SizedBox(height: 18),
+            _DetailCard(
+              accentColor: accentColor,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Instructions',
+                    style: TextStyle(
+                      color: accentColor,
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    exercise.instructions,
+                    style: const TextStyle(
+                      color: Colors.black54,
+                      fontSize: 13,
+                      height: 1.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          if (exercise.safetyInfo.isNotEmpty) ...[
+            const SizedBox(height: 18),
+            _DetailCard(
+              accentColor: accentColor,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Safety Info',
+                    style: TextStyle(
+                      color: accentColor,
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    exercise.safetyInfo,
+                    style: const TextStyle(
+                      color: Colors.black54,
+                      fontSize: 13,
+                      height: 1.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: 18),
           _DetailCard(
             accentColor: accentColor,
