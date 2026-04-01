@@ -5,6 +5,7 @@ import '../../data/reference/exercise_category_data.dart';
 import '../../data/memory/custom_exercise_store.dart';
 import '../../data/repositories/exercise_api_repository.dart';
 import '../../data/models/api_exercise.dart';
+import '../../domain/providers/auth_provider.dart';
 import '../../domain/providers/routine_provider.dart';
 import '../../models/custom_exercise.dart';
 import '../../models/exercise.dart';
@@ -170,6 +171,7 @@ class _ExerciseListScreenState extends State<ExerciseListScreen> {
     final brightness = ThemeData.estimateBrightnessForColor(widget.themeColor);
     final foregroundColor =
         brightness == Brightness.dark ? Colors.white : Colors.black;
+    final isSignedIn = context.watch<AuthProvider>().isSignedIn;
     final routineProvider = context.watch<RoutineProvider>();
 
     return Scaffold(
@@ -387,17 +389,19 @@ class _ExerciseListScreenState extends State<ExerciseListScreen> {
                                           tooltip: isInRoutine
                                               ? 'Remove from routine'
                                               : 'Add to routine',
-                                          onPressed: () {
-                                            if (isInRoutine) {
-                                              context
-                                                  .read<RoutineProvider>()
-                                                  .removeExercise(exercise.id);
-                                            } else {
-                                              context
-                                                  .read<RoutineProvider>()
-                                                  .addExercise(exercise);
-                                            }
-                                          },
+                                          onPressed: isSignedIn
+                                              ? () {
+                                                  if (isInRoutine) {
+                                                    context
+                                                        .read<RoutineProvider>()
+                                                        .removeExercise(exercise.id);
+                                                  } else {
+                                                    context
+                                                        .read<RoutineProvider>()
+                                                        .addExercise(exercise);
+                                                  }
+                                                }
+                                              : null,
                                           icon: Icon(
                                             isInRoutine
                                                 ? Icons.check_circle

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../navigation/app_router.dart';
+import '../../domain/providers/auth_provider.dart';
 import '../../domain/providers/profile_provider.dart';
 import '../../domain/providers/routine_provider.dart';
 import '../widgets/app_drawer.dart';
@@ -26,9 +27,11 @@ class _AssessmentScreenState extends State<AssessmentScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
     final profile = context.watch<ProfileProvider>();
     final routine = context.watch<RoutineProvider>();
     final bmiColor = _bmiColor(profile.bmi);
+    final isOnboarding = !profile.hasEssentialProfileDetails;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FB),
@@ -52,7 +55,13 @@ class _AssessmentScreenState extends State<AssessmentScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (isOnboarding) ...[
+              _buildProfileCompletionBanner(profile),
+              const SizedBox(height: 20),
+            ],
             _buildProfileBanner(profile, bmiColor),
+            const SizedBox(height: 20),
+            _buildAccountCard(auth),
             const SizedBox(height: 20),
             _buildCollapsibleSection(
               title: 'Assessment Results',
@@ -160,6 +169,112 @@ class _AssessmentScreenState extends State<AssessmentScreen> {
           ),
           const SizedBox(height: 14),
           ProfileCompleteness(value: profile.profileCompleteness),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAccountCard(AuthProvider auth) {
+    final userEmail = auth.userEmail ?? 'No signed-in email';
+    final lastSignIn = auth.lastSignInTime == null
+        ? 'Unavailable'
+        : _formatDateTime(auth.lastSignInTime!);
+
+    return _card(
+      color: Colors.indigo,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Account',
+            style: TextStyle(
+              color: Colors.black87,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 12),
+          _InputRow(
+            label: 'Signed In As',
+            value: userEmail,
+            icon: Icons.alternate_email,
+            color: Colors.indigo,
+            onEdit: _noopEdit,
+          ),
+          _divider(),
+          _InputRow(
+            label: 'Last Signed In',
+            value: lastSignIn,
+            icon: Icons.schedule,
+            color: Colors.indigo,
+            onEdit: _noopEdit,
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () => _confirmSignOut(auth),
+              icon: const Icon(Icons.logout_rounded),
+              label: const Text('Sign Out'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProfileCompletionBanner(ProfileProvider profile) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFFE0F2FE), Color(0xFFECFCCB)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: Colors.teal.withValues(alpha: 0.22)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Complete your profile',
+            style: TextStyle(
+              color: Colors.black87,
+              fontSize: 18,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Add your age, height, current weight, target weight, and initial weight so the app can personalize your fitness dashboard and recommendations.',
+            style: TextStyle(
+              color: Colors.black54,
+              fontSize: 13,
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 14),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: LinearProgressIndicator(
+              value: profile.profileCompleteness,
+              minHeight: 10,
+              backgroundColor: Colors.white.withValues(alpha: 0.8),
+              valueColor: const AlwaysStoppedAnimation<Color>(Colors.teal),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '${(profile.profileCompleteness * 100).round()}% complete',
+            style: const TextStyle(
+              color: Colors.teal,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
         ],
       ),
     );
@@ -538,6 +653,17 @@ class _AssessmentScreenState extends State<AssessmentScreen> {
     );
   }
 
+  Future<void> _confirmSignOut(AuthProvider auth) async {
+    final confirmed = await _confirmAction(
+      'Sign out?',
+      'You will need to sign in again to access your dashboard.',
+    );
+    if (!mounted || !confirmed) {
+      return;
+    }
+    await auth.logout();
+  }
+
   Color _bmiColor(double bmi) {
     if (bmi < 18.5) return Colors.blueAccent;
     if (bmi < 25.0) return Colors.green;
@@ -678,7 +804,7 @@ class _AssessmentScreenState extends State<AssessmentScreen> {
     String Function(double value)? valueTextBuilder,
     required ValueChanged<double> onSave,
   }) async {
-    double current = initial;
+    double current = initial.clamp(min, max).toDouble();
     await showDialog<void>(
       context: context,
       builder: (_) => StatefulBuilder(
@@ -733,6 +859,26 @@ class _AssessmentScreenState extends State<AssessmentScreen> {
     );
     return confirmed ?? false;
   }
+
+  String _formatDateTime(DateTime value) {
+    final month = switch (value.month) {
+      1 => 'Jan',
+      2 => 'Feb',
+      3 => 'Mar',
+      4 => 'Apr',
+      5 => 'May',
+      6 => 'Jun',
+      7 => 'Jul',
+      8 => 'Aug',
+      9 => 'Sep',
+      10 => 'Oct',
+      11 => 'Nov',
+      _ => 'Dec',
+    };
+    final hour = value.hour.toString().padLeft(2, '0');
+    final minute = value.minute.toString().padLeft(2, '0');
+    return '$month ${value.day}, ${value.year} at $hour:$minute';
+  }
 }
 
 class _InputRow extends StatelessWidget {
@@ -746,6 +892,7 @@ class _InputRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isReadOnly = onEdit == _noopEdit;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: Row(
@@ -763,16 +910,25 @@ class _InputRow extends StatelessWidget {
             ),
           ),
           InkWell(
-            onTap: onEdit,
+            onTap: isReadOnly ? null : onEdit,
             borderRadius: BorderRadius.circular(8),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.08),
+                color: color.withValues(alpha: isReadOnly ? 0.04 : 0.08),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: color.withValues(alpha: 0.45)),
+                border: Border.all(
+                  color: color.withValues(alpha: isReadOnly ? 0.2 : 0.45),
+                ),
               ),
-              child: Text('Edit', style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.bold)),
+              child: Text(
+                isReadOnly ? 'View' : 'Edit',
+                style: TextStyle(
+                  color: color,
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ),
         ],
@@ -780,6 +936,8 @@ class _InputRow extends StatelessWidget {
     );
   }
 }
+
+void _noopEdit() {}
 
 class _PreferenceSwitchRow extends StatelessWidget {
   final String label;

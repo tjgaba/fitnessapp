@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../models/exercise.dart';
+import '../../domain/providers/auth_provider.dart';
+import '../../domain/providers/profile_provider.dart';
 import '../screens/add_exercise_screen.dart';
 import '../screens/assessment_screen.dart';
 import '../screens/bmi_calculator_screen.dart';
@@ -18,9 +21,50 @@ class AppRouter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Centralized entry point for future onboarding/auth/startup decisions.
-    const initialRoute = AppRoute.home;
-    return initialRoute.buildPage();
+    final authProvider = context.read<AuthProvider>();
+    final profileProvider = context.watch<ProfileProvider>();
+    if (authProvider.isSignedIn &&
+        !profileProvider.hasEssentialProfileDetails &&
+        !authProvider.hasShownProfilePromptForSession) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!context.mounted) {
+          return;
+        }
+        final route = ModalRoute.of(context);
+        if (route?.isCurrent == false) {
+          return;
+        }
+
+        authProvider.markProfilePromptShown();
+
+        showDialog<void>(
+          context: context,
+          builder: (dialogContext) {
+            return AlertDialog(
+              title: const Text('Complete Your Profile'),
+              content: const Text(
+                'Complete your profile in Profile Settings to personalize the app.',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: const Text('Later'),
+                ),
+                FilledButton(
+                  onPressed: () {
+                    Navigator.of(dialogContext).pop();
+                    Navigator.of(context).push(AppRoute.assessment.route());
+                  },
+                  child: const Text('Open Profile'),
+                ),
+              ],
+            );
+          },
+        );
+      });
+    }
+
+    return const HomeScreen();
   }
 }
 

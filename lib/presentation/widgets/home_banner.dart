@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../navigation/app_router.dart';
+import '../../domain/providers/auth_provider.dart';
 import '../../domain/providers/profile_provider.dart';
 import '../../domain/providers/routine_provider.dart';
+import '../utils/auth_prompt.dart';
 import 'metric_card.dart';
 
 /// Home screen overall-stats banner.
@@ -31,14 +33,27 @@ class _HomeBannerState extends State<HomeBanner> {
     Future.delayed(const Duration(milliseconds: 150), () {
       if (mounted) setState(() => _profilePressed = false);
     });
+    if (!context.read<AuthProvider>().isSignedIn) {
+      showSignInRequiredDialog(context);
+      return;
+    }
     Navigator.of(context).pushRoute(AppRoute.assessment);
   }
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
     final profile = context.watch<ProfileProvider>();
     final routine = context.watch<RoutineProvider>();
-    final displayName = profile.name.trim().isEmpty ? 'Guest' : profile.name.trim();
+    final emailPrefix = auth.userEmail?.split('@').first.trim();
+    final profileName = profile.name.trim();
+    final displayName = !auth.isSignedIn
+        ? 'Welcome Guest'
+        : (profileName.isNotEmpty && profileName != 'Guest')
+        ? 'Welcome, $profileName!'
+        : (emailPrefix == null || emailPrefix.isEmpty)
+        ? 'Welcome Guest'
+        : 'Welcome, $emailPrefix!';
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
@@ -73,7 +88,7 @@ class _HomeBannerState extends State<HomeBanner> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Welcome Back, $displayName',
+                      displayName,
                       style: const TextStyle(
                         fontSize: 19,
                         fontWeight: FontWeight.w900,
@@ -83,7 +98,9 @@ class _HomeBannerState extends State<HomeBanner> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Here is your current fitness snapshot.',
+                      profile.name.trim().isEmpty
+                          ? 'Here is your current fitness snapshot.'
+                          : '${profile.name.trim()} profile, routine, and workout progress in one place.',
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.black.withValues(alpha: 0.6),

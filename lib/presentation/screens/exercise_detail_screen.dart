@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../navigation/app_router.dart';
 import '../../models/exercise.dart';
+import '../../domain/providers/auth_provider.dart';
 import '../../domain/providers/routine_provider.dart';
 import '../widgets/app_drawer.dart';
 
@@ -18,6 +19,7 @@ class ExerciseDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isSignedIn = context.watch<AuthProvider>().isSignedIn;
     final isInRoutine = context.watch<RoutineProvider>().isInRoutine(exercise.id);
 
     return Scaffold(
@@ -194,13 +196,15 @@ class ExerciseDetailScreen extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: FilledButton.icon(
-              onPressed: () {
-                if (isInRoutine) {
-                  context.read<RoutineProvider>().removeExercise(exercise.id);
-                } else {
-                  context.read<RoutineProvider>().addExercise(exercise);
-                }
-              },
+              onPressed: isSignedIn
+                  ? () {
+                      if (isInRoutine) {
+                        context.read<RoutineProvider>().removeExercise(exercise.id);
+                      } else {
+                        context.read<RoutineProvider>().addExercise(exercise);
+                      }
+                    }
+                  : null,
               style: FilledButton.styleFrom(
                 backgroundColor: isInRoutine ? Colors.green : accentColor,
                 padding: const EdgeInsets.symmetric(vertical: 16),
@@ -209,7 +213,11 @@ class ExerciseDetailScreen extends StatelessWidget {
                 isInRoutine ? Icons.check_circle : Icons.playlist_add_circle,
               ),
               label: Text(
-                isInRoutine ? 'Remove From Routine' : 'Add To Routine',
+                !isSignedIn
+                    ? 'Sign In To Add'
+                    : isInRoutine
+                        ? 'Remove From Routine'
+                        : 'Add To Routine',
               ),
             ),
           ),

@@ -5,6 +5,7 @@ import '../../data/memory/custom_exercise_store.dart';
 import '../../data/models/api_exercise.dart';
 import '../../data/reference/exercise_category_data.dart';
 import '../../data/repositories/exercise_api_repository.dart';
+import '../../domain/providers/auth_provider.dart';
 import '../../domain/providers/routine_provider.dart';
 import '../../models/custom_exercise.dart';
 import '../../models/exercise.dart';
@@ -158,6 +159,7 @@ class _ExerciseBrowseScreenState extends State<ExerciseBrowseScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isSignedIn = context.watch<AuthProvider>().isSignedIn;
     final routineProvider = context.watch<RoutineProvider>();
 
     return ValueListenableBuilder<List<CustomExercise>>(
@@ -191,10 +193,17 @@ class _ExerciseBrowseScreenState extends State<ExerciseBrowseScreen> {
                 apiExerciseCount: apiExerciseCount,
               ),
               floatingActionButton: FloatingActionButton.extended(
-                onPressed: () =>
-                    Navigator.of(context).pushRoute(AppRoute.routineSummary),
-                icon: const Icon(Icons.fact_check_outlined),
-                label: Text('Routine (${routineProvider.exerciseCount})'),
+                onPressed: isSignedIn
+                    ? () => Navigator.of(context).pushRoute(AppRoute.routineSummary)
+                    : null,
+                icon: Icon(
+                  isSignedIn ? Icons.fact_check_outlined : Icons.lock_outline,
+                ),
+                label: Text(
+                  isSignedIn
+                      ? 'Routine (${routineProvider.exerciseCount})'
+                      : 'Sign In To Use Routine',
+                ),
               ),
             );
           },
@@ -337,6 +346,7 @@ class _ExerciseBrowseTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isSignedIn = context.watch<AuthProvider>().isSignedIn;
     final exercise = entry.exercise;
     final isSelected = context.watch<RoutineProvider>().isInRoutine(exercise.id);
 
@@ -454,7 +464,7 @@ class _ExerciseBrowseTile extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: FilledButton.icon(
-                onPressed: isSelected
+                onPressed: !isSignedIn || isSelected
                     ? null
                     : () {
                         context.read<RoutineProvider>().addExercise(exercise);
@@ -466,7 +476,11 @@ class _ExerciseBrowseTile extends StatelessWidget {
                   isSelected ? Icons.check : Icons.playlist_add_outlined,
                 ),
                 label: Text(
-                  isSelected ? 'Added to Routine' : 'Add to Routine',
+                  !isSignedIn
+                      ? 'Sign In To Add'
+                      : isSelected
+                          ? 'Added to Routine'
+                          : 'Add to Routine',
                 ),
               ),
             ),

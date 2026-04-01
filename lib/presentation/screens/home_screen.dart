@@ -4,9 +4,11 @@ import 'package:provider/provider.dart';
 import '../navigation/app_router.dart';
 import '../../data/memory/custom_exercise_store.dart';
 import '../../models/custom_exercise.dart';
+import '../../domain/providers/auth_provider.dart';
 import '../../domain/providers/routine_provider.dart';
 import '../widgets/category_tile.dart';
 import '../widgets/app_drawer.dart';
+import '../utils/auth_prompt.dart';
 import '../widgets/home_banner.dart';
 import '../../data/reference/exercise_category_data.dart';
 
@@ -51,9 +53,52 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Future<void> _handleMenuSelection(String value) async {
+    switch (value) {
+      case 'settings':
+        if (!context.read<AuthProvider>().isSignedIn) {
+          await showSignInRequiredDialog(context);
+          return;
+        }
+        await Navigator.of(context).pushRoute(AppRoute.assessment);
+        return;
+      case 'signout':
+        final shouldLogout = await showDialog<bool>(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: const Text('Sign out?'),
+              content: const Text(
+                'You will need to sign in again to access your dashboard.',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: const Text('Cancel'),
+                ),
+                FilledButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: const Text('Sign Out'),
+                ),
+              ],
+            );
+          },
+        );
+
+        if (shouldLogout == true && mounted) {
+          await context.read<AuthProvider>().logout();
+        }
+        return;
+      case 'signin':
+        await openLoginScreen(context);
+        return;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
+    final isSignedIn = context.watch<AuthProvider>().isSignedIn;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FB),
@@ -67,8 +112,9 @@ class _HomeScreenState extends State<HomeScreen> {
             padding: const EdgeInsets.only(right: 4),
             child: IconButton(
               tooltip: 'Search API Exercises',
-              onPressed: () =>
-                  Navigator.of(context).pushRoute(AppRoute.exerciseSearch),
+              onPressed: isSignedIn
+                  ? () => Navigator.of(context).pushRoute(AppRoute.exerciseSearch)
+                  : () => showSignInRequiredDialog(context),
               icon: const Icon(Icons.travel_explore_outlined),
             ),
           ),
@@ -76,16 +122,37 @@ class _HomeScreenState extends State<HomeScreen> {
             padding: const EdgeInsets.only(right: 8),
             child: IconButton(
               tooltip: 'Open BMI Calculator',
-              onPressed: () => Navigator.of(context).pushRoute(AppRoute.bmi),
+              onPressed: isSignedIn
+                  ? () => Navigator.of(context).pushRoute(AppRoute.bmi)
+                  : () => showSignInRequiredDialog(context),
               icon: const Icon(Icons.monitor_weight_outlined),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: PopupMenuButton<String>(
+              tooltip: 'Open account options',
+              onSelected: _handleMenuSelection,
+              itemBuilder: (context) => [
+                const PopupMenuItem<String>(
+                  value: 'settings',
+                  child: Text('Settings'),
+                ),
+                PopupMenuItem<String>(
+                  value: isSignedIn ? 'signout' : 'signin',
+                  child: Text(isSignedIn ? 'Sign Out' : 'Sign In'),
+                ),
+              ],
             ),
           ),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: _openAddExerciseScreen,
-        icon: const Icon(Icons.add),
-        label: const Text('Add Exercise'),
+        onPressed: isSignedIn
+            ? _openAddExerciseScreen
+            : () => showSignInRequiredDialog(context),
+        icon: Icon(isSignedIn ? Icons.add : Icons.lock_outline),
+        label: Text(isSignedIn ? 'Add Exercise' : 'Sign In To Add'),
       ),
 
       body: SingleChildScrollView(
@@ -119,6 +186,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildRoutineBuilderSection(BuildContext context) {
+    final isSignedIn = context.watch<AuthProvider>().isSignedIn;
     final routineProvider = context.watch<RoutineProvider>();
 
     return Container(
@@ -178,7 +246,9 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(height: 12),
           Text(
-            routineProvider.exerciseCount == 0
+            !isSignedIn
+                ? 'Explore categories and exercise overviews. Sign in to build routines, track workouts, and save progress.'
+                : routineProvider.exerciseCount == 0
                 ? 'Build a cross-screen training routine with provider-backed state.'
                 : 'Track ${routineProvider.totalSets} sets and ${_formatNumber(routineProvider.totalVolume)} kg of total volume in your current routine.',
             style: const TextStyle(
@@ -192,28 +262,31 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               Expanded(
                 child: FilledButton.icon(
-                  onPressed: () =>
-                      Navigator.of(context).pushRoute(AppRoute.exerciseBrowse),
+                  onPressed: isSignedIn
+                      ? () => Navigator.of(context).pushRoute(AppRoute.exerciseBrowse)
+                      : () => showSignInRequiredDialog(context),
                   icon: const Icon(Icons.search),
-                  label: const Text('Browse Exercises'),
+                  label: Text(isSignedIn ? 'Browse Exercises' : 'Browse Locked'),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: FilledButton.tonalIcon(
-                  onPressed: () =>
-                      Navigator.of(context).pushRoute(AppRoute.exerciseSearch),
+                  onPressed: isSignedIn
+                      ? () => Navigator.of(context).pushRoute(AppRoute.exerciseSearch)
+                      : () => showSignInRequiredDialog(context),
                   icon: const Icon(Icons.travel_explore_outlined),
-                  label: const Text('Search API'),
+                  label: Text(isSignedIn ? 'Search API' : 'Search Locked'),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: () =>
-                      Navigator.of(context).pushRoute(AppRoute.routineSummary),
+                  onPressed: isSignedIn
+                      ? () => Navigator.of(context).pushRoute(AppRoute.routineSummary)
+                      : () => showSignInRequiredDialog(context),
                   icon: const Icon(Icons.fact_check_outlined),
-                  label: const Text('View Routine'),
+                  label: Text(isSignedIn ? 'View Routine' : 'Routine Locked'),
                 ),
               ),
             ],
@@ -222,21 +295,26 @@ class _HomeScreenState extends State<HomeScreen> {
           SizedBox(
             width: double.infinity,
             child: FilledButton.tonalIcon(
-              onPressed: () =>
-                  Navigator.of(context).pushRoute(AppRoute.outdoorWorkout),
+              onPressed: isSignedIn
+                  ? () => Navigator.of(context).pushRoute(AppRoute.outdoorWorkout)
+                  : () => showSignInRequiredDialog(context),
               icon: const Icon(Icons.route_rounded),
-              label: const Text('Track Outdoor Workout'),
+              label: Text(
+                isSignedIn ? 'Track Outdoor Workout' : 'Outdoor Workout Locked',
+              ),
             ),
           ),
           const SizedBox(height: 10),
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
-              onPressed: () => Navigator.of(
-                context,
-              ).pushRoute(AppRoute.outdoorWorkoutHistory),
+              onPressed: isSignedIn
+                  ? () => Navigator.of(context).pushRoute(AppRoute.outdoorWorkoutHistory)
+                  : () => showSignInRequiredDialog(context),
               icon: const Icon(Icons.history_rounded),
-              label: const Text('Outdoor Workout History'),
+              label: Text(
+                isSignedIn ? 'Outdoor Workout History' : 'History Locked',
+              ),
             ),
           ),
         ],

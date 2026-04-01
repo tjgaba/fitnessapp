@@ -9,8 +9,15 @@ import '../../domain/providers/workout_tracking_provider.dart';
 import '../navigation/app_router.dart';
 import '../widgets/app_drawer.dart';
 
-class OutdoorWorkoutScreen extends StatelessWidget {
+class OutdoorWorkoutScreen extends StatefulWidget {
   const OutdoorWorkoutScreen({super.key});
+
+  @override
+  State<OutdoorWorkoutScreen> createState() => _OutdoorWorkoutScreenState();
+}
+
+class _OutdoorWorkoutScreenState extends State<OutdoorWorkoutScreen> {
+  int? _lastHandledNoticeId;
 
   @override
   Widget build(BuildContext context) {
@@ -26,6 +33,42 @@ class OutdoorWorkoutScreen extends StatelessWidget {
       ),
       body: Consumer<WorkoutTrackingProvider>(
         builder: (context, provider, _) {
+          final noticeId = provider.completionNoticeId;
+          if (noticeId != null && noticeId != _lastHandledNoticeId) {
+            _lastHandledNoticeId = noticeId;
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!mounted) {
+                return;
+              }
+              final title = provider.completionNoticeTitle ?? 'Workout Complete!';
+              final body = provider.completionNoticeBody ?? 'Your workout is complete.';
+              final messenger = ScaffoldMessenger.of(context);
+              messenger.hideCurrentMaterialBanner();
+              messenger.showMaterialBanner(
+                MaterialBanner(
+                  content: Text('$title $body'),
+                  leading: const Icon(
+                    Icons.notifications_active_outlined,
+                    color: Colors.deepOrange,
+                  ),
+                  backgroundColor: const Color(0xFFFFFBF7),
+                  actions: [
+                    TextButton(
+                      onPressed: () => messenger.hideCurrentMaterialBanner(),
+                      child: const Text('Dismiss'),
+                    ),
+                  ],
+                ),
+              );
+              Future<void>.delayed(const Duration(seconds: 4), () {
+                if (!mounted) {
+                  return;
+                }
+                messenger.hideCurrentMaterialBanner();
+              });
+            });
+          }
+
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [

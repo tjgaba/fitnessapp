@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../../data/repositories/profile_repository.dart';
+import '../../data/services/auth_service.dart';
 import '../../models/user_profile.dart';
 import '../../utils/bmi_calculator.dart';
 
@@ -28,14 +29,22 @@ class ProfileProvider extends ChangeNotifier {
   static const UserProfile _defaultProfile = UserProfile.defaults();
 
   final ProfileRepository _repository;
+  final AuthService _authService;
 
   UserProfile _profile = _defaultProfile;
   bool _isLoaded = false;
   late final Future<void> _loadFuture;
+  String _activeUserId = '';
 
-  ProfileProvider([ProfileRepository? repository])
-      : _repository = repository ?? ProfileRepository() {
+  ProfileProvider(
+    ProfileRepository? repository,
+    AuthService? authService,
+  )   : _repository = repository ?? ProfileRepository(),
+        _authService = authService ?? AuthService() {
     _loadFuture = _init();
+    _authService.authStateChanges.listen((_) {
+      _reloadForCurrentUser();
+    });
   }
 
   UserProfile get profile => _profile;
@@ -54,6 +63,13 @@ class ProfileProvider extends ChangeNotifier {
   bool get notificationsEnabled => _profile.notificationsEnabled;
   bool get isLoaded => _isLoaded;
   bool get isMetric => _profile.weightUnit == 'kg';
+  bool get needsProfileCompletion => profileCompleteness < 1;
+  bool get hasEssentialProfileDetails =>
+      age > 0 &&
+      heightCm > 0 &&
+      weightKg > 0 &&
+      targetWeightKg > 0 &&
+      initialWeightKg > 0;
 
   double get bmi => calculateBmi(weightKg, heightCm);
   String get bmiCategoryLabel => bmiCategory(bmi);
@@ -159,9 +175,9 @@ class ProfileProvider extends ChangeNotifier {
 
   Future<void> resetProfile() async {
     await _ensureLoaded();
-    _profile = _defaultProfile;
+    _profile = _seedProfileForCurrentUser(const UserProfile.defaults());
     notifyListeners();
-    await _repository.clearProfile();
+    await _repository.clearProfile(_activeUserId);
   }
 
   Future<void> resetPreferences() async {
@@ -172,7 +188,7 @@ class ProfileProvider extends ChangeNotifier {
       notificationsEnabled: _defaultProfile.notificationsEnabled,
     );
     notifyListeners();
-    await _repository.saveProfile(_profile);
+    await _repository.saveProfile(_activeUserId, _profile);
   }
 
   Future<void> resetAll() async {
@@ -180,7 +196,9 @@ class ProfileProvider extends ChangeNotifier {
   }
 
   Future<void> _init() async {
-    _profile = await _repository.loadProfile();
+    _activeUserId = _authService.currentUser?.uid ?? '';
+    final loadedProfile = await _repository.loadProfile(_activeUserId);
+    _profile = _seedProfileForCurrentUser(loadedProfile);
     _isLoaded = true;
     notifyListeners();
   }
@@ -189,7 +207,7 @@ class ProfileProvider extends ChangeNotifier {
     await _ensureLoaded();
     _profile = profile;
     notifyListeners();
-    await _repository.saveProfile(_profile);
+    await _repository.saveProfile(_activeUserId, _profile);
   }
 
   Future<void> _ensureLoaded() async {
@@ -198,5 +216,43 @@ class ProfileProvider extends ChangeNotifier {
     }
 
     await _loadFuture;
+  }
+
+  Future<void> _reloadForCurrentUser() async {
+    final userId = _authService.currentUser?.uid ?? '';
+    _activeUserId = userId;
+    final loadedProfile = await _repository.loadProfile(userId);
+    _profile = _seedProfileForCurrentUser(loadedProfile);
+    _isLoaded = true;
+    notifyListeners();
+  }
+
+  UserProfile _seedProfileForCurrentUser(UserProfile profile) {
+    final email = _authService.currentUser?.email?.trim();
+    final fallbackName = _emailPrefix(email);
+    final currentName = profile.name.trim();
+
+    if (fallbackName.isEmpty) {
+      return profile;
+    }
+
+    if (currentName.isEmpty || currentName == _defaultProfile.name) {
+      return profile.copyWith(name: fallbackName);
+    }
+
+    return profile;
+  }
+
+  String _emailPrefix(String? email) {
+    if (email == null || email.isEmpty || !email.contains('@')) {
+      return '';
+    }
+
+    final prefix = email.split('@').first.trim();
+    if (prefix.isEmpty) {
+      return '';
+    }
+
+    return prefix[0].toUpperCase() + prefix.substring(1);
   }
 }

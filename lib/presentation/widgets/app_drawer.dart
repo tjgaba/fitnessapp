@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../../domain/providers/auth_provider.dart';
 import '../navigation/app_router.dart';
+import '../utils/auth_prompt.dart';
 import '../../data/reference/exercise_category_data.dart';
 import '../../models/workout_category.dart';
 
@@ -16,6 +19,8 @@ class AppDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isSignedIn = context.watch<AuthProvider>().isSignedIn;
+
     return Drawer(
       backgroundColor: const Color(0xFFF5F7FB),
       child: SafeArea(
@@ -81,6 +86,7 @@ class AppDrawer extends StatelessWidget {
                     label: 'Exercise Browser',
                     color: Colors.teal,
                     selected: currentRouteName == AppRoute.exerciseBrowse.name,
+                    enabled: isSignedIn,
                     onTap: () => _openRoute(context, AppRoute.exerciseBrowse),
                   ),
                   _DrawerItem(
@@ -88,6 +94,7 @@ class AppDrawer extends StatelessWidget {
                     label: 'Search API Exercises',
                     color: Colors.blueAccent,
                     selected: currentRouteName == AppRoute.exerciseSearch.name,
+                    enabled: isSignedIn,
                     onTap: () => _openRoute(context, AppRoute.exerciseSearch),
                   ),
                   _DrawerItem(
@@ -95,6 +102,7 @@ class AppDrawer extends StatelessWidget {
                     label: 'Outdoor Workout',
                     color: Colors.deepOrange,
                     selected: currentRouteName == AppRoute.outdoorWorkout.name,
+                    enabled: isSignedIn,
                     onTap: () => _openRoute(context, AppRoute.outdoorWorkout),
                   ),
                   _DrawerItem(
@@ -103,6 +111,7 @@ class AppDrawer extends StatelessWidget {
                     color: Colors.deepOrange,
                     selected:
                         currentRouteName == AppRoute.outdoorWorkoutHistory.name,
+                    enabled: isSignedIn,
                     onTap: () =>
                         _openRoute(context, AppRoute.outdoorWorkoutHistory),
                   ),
@@ -111,6 +120,7 @@ class AppDrawer extends StatelessWidget {
                     label: 'Routine Summary',
                     color: Colors.indigo,
                     selected: currentRouteName == AppRoute.routineSummary.name,
+                    enabled: isSignedIn,
                     onTap: () => _openRoute(context, AppRoute.routineSummary),
                   ),
                   _DrawerItem(
@@ -118,6 +128,7 @@ class AppDrawer extends StatelessWidget {
                     label: 'Add Exercise',
                     color: Colors.green,
                     selected: currentRouteName == AppRoute.addExercise.name,
+                    enabled: isSignedIn,
                     onTap: () => _openRoute(context, AppRoute.addExercise),
                   ),
                   _DrawerItem(
@@ -125,6 +136,7 @@ class AppDrawer extends StatelessWidget {
                     label: 'BMI Calculator',
                     color: Colors.orange,
                     selected: currentRouteName == AppRoute.bmi.name,
+                    enabled: isSignedIn,
                     onTap: () => _openRoute(context, AppRoute.bmi),
                   ),
                   _DrawerItem(
@@ -132,7 +144,20 @@ class AppDrawer extends StatelessWidget {
                     label: 'Profile Settings',
                     color: Colors.purple,
                     selected: currentRouteName == AppRoute.assessment.name,
+                    enabled: isSignedIn,
                     onTap: () => _openRoute(context, AppRoute.assessment),
+                  ),
+                  _DrawerItem(
+                    icon: isSignedIn ? Icons.verified_user_outlined : Icons.login_rounded,
+                    label: isSignedIn ? 'Signed In' : 'Sign In',
+                    color: Colors.black87,
+                    selected: false,
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      if (!isSignedIn) {
+                        openLoginScreen(context);
+                      }
+                    },
                   ),
                   const SizedBox(height: 14),
                   const Padding(
@@ -227,6 +252,7 @@ class _DrawerItem extends StatelessWidget {
   final String label;
   final Color color;
   final bool selected;
+  final bool enabled;
   final VoidCallback onTap;
 
   const _DrawerItem({
@@ -234,6 +260,7 @@ class _DrawerItem extends StatelessWidget {
     required this.label,
     required this.color,
     required this.selected,
+    this.enabled = true,
     required this.onTap,
   });
 
@@ -245,7 +272,7 @@ class _DrawerItem extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(18),
-          onTap: onTap,
+          onTap: enabled ? onTap : () => showSignInRequiredDialog(context),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 180),
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -257,12 +284,14 @@ class _DrawerItem extends StatelessWidget {
               border: Border.all(
                 color: selected
                     ? color.withValues(alpha: 0.55)
-                    : color.withValues(alpha: 0.18),
+                    : color.withValues(alpha: enabled ? 0.18 : 0.08),
                 width: selected ? 1.4 : 1,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: color.withValues(alpha: selected ? 0.18 : 0.08),
+                  color: color.withValues(
+                    alpha: selected ? 0.18 : enabled ? 0.08 : 0.03,
+                  ),
                   blurRadius: selected ? 10 : 6,
                   spreadRadius: 1,
                 ),
@@ -274,17 +303,23 @@ class _DrawerItem extends StatelessWidget {
                   width: 38,
                   height: 38,
                   decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.1),
+                    color: color.withValues(alpha: enabled ? 0.1 : 0.05),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(icon, color: color, size: 18),
+                  child: Icon(
+                    icon,
+                    color: enabled ? color : color.withValues(alpha: 0.45),
+                    size: 18,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     label,
                     style: TextStyle(
-                      color: selected ? color : Colors.black87,
+                      color: enabled
+                          ? (selected ? color : Colors.black87)
+                          : Colors.black45,
                       fontSize: 14,
                       fontWeight:
                           selected ? FontWeight.bold : FontWeight.w600,
@@ -293,7 +328,7 @@ class _DrawerItem extends StatelessWidget {
                 ),
                 Icon(
                   Icons.chevron_right_rounded,
-                  color: color.withValues(alpha: 0.65),
+                  color: color.withValues(alpha: enabled ? 0.65 : 0.3),
                 ),
               ],
             ),

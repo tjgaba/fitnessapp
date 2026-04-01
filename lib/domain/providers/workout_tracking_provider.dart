@@ -6,6 +6,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../data/services/location_service.dart';
+import '../../data/services/notification_service.dart';
 import '../../models/outdoor_workout_record.dart';
 
 enum WorkoutPhase { idle, active, finished }
@@ -14,6 +15,7 @@ class WorkoutTrackingProvider extends ChangeNotifier {
   static const String _historyKey = 'outdoor_workout_history';
 
   final LocationService _locationService;
+  final NotificationService _notificationService;
 
   WorkoutPhase _workoutPhase = WorkoutPhase.idle;
   Position? _startPosition;
@@ -30,9 +32,15 @@ class WorkoutTrackingProvider extends ChangeNotifier {
 
   Timer? _elapsedTimer;
   Timer? _routePollingTimer;
+  int? _completionNoticeId;
+  String? _completionNoticeTitle;
+  String? _completionNoticeBody;
 
-  WorkoutTrackingProvider([LocationService? locationService])
-      : _locationService = locationService ?? LocationService() {
+  WorkoutTrackingProvider([
+    LocationService? locationService,
+    NotificationService? notificationService,
+  ])  : _locationService = locationService ?? LocationService(),
+        _notificationService = notificationService ?? NotificationService() {
     _loadHistory();
   }
 
@@ -53,6 +61,9 @@ class WorkoutTrackingProvider extends ChangeNotifier {
   bool get canFinish => _workoutPhase == WorkoutPhase.active;
   bool get hasRoutePoints => _routePoints.isNotEmpty;
   bool get hasHistory => _history.isNotEmpty;
+  int? get completionNoticeId => _completionNoticeId;
+  String? get completionNoticeTitle => _completionNoticeTitle;
+  String? get completionNoticeBody => _completionNoticeBody;
 
   String get formattedTime {
     final hours = _elapsedSeconds ~/ 3600;
@@ -140,6 +151,7 @@ class WorkoutTrackingProvider extends ChangeNotifier {
     _isLoadingLocation = true;
     _cancelTimers();
     notifyListeners();
+    final isFirstWorkoutOfDay = _isFirstWorkoutOfDay();
 
     try {
       final endPosition = await _locationService.getCurrentPosition();
@@ -159,11 +171,17 @@ class WorkoutTrackingProvider extends ChangeNotifier {
 
       _routeDistanceMeters = _calculateRouteDistance();
       await _persistCurrentWorkout();
+      await _showWorkoutCompletionNotification(
+        isFirstWorkoutOfDay: isFirstWorkoutOfDay,
+      );
       _workoutPhase = WorkoutPhase.finished;
     } catch (e) {
       _errorMessage = e.toString().replaceFirst('Exception: ', '');
       _routeDistanceMeters = _calculateRouteDistance();
       await _persistCurrentWorkout();
+      await _showWorkoutCompletionNotification(
+        isFirstWorkoutOfDay: isFirstWorkoutOfDay,
+      );
       _workoutPhase = WorkoutPhase.finished;
     } finally {
       _isLoadingLocation = false;
@@ -184,6 +202,9 @@ class WorkoutTrackingProvider extends ChangeNotifier {
     _errorMessage = null;
     _isLoadingLocation = false;
     _routePoints.clear();
+    _completionNoticeId = null;
+    _completionNoticeTitle = null;
+    _completionNoticeBody = null;
     notifyListeners();
   }
 
@@ -304,6 +325,47 @@ class WorkoutTrackingProvider extends ChangeNotifier {
       _history.map((entry) => entry.toJson()).toList(),
     );
     await prefs.setString(_historyKey, payload);
+  }
+
+  bool _isFirstWorkoutOfDay() {
+    final startedAt = _startTime;
+    if (startedAt == null) {
+      return false;
+    }
+
+    return !_history.any((entry) {
+      final loggedAt = entry.startedAt;
+      return loggedAt.year == startedAt.year &&
+          loggedAt.month == startedAt.month &&
+          loggedAt.day == startedAt.day;
+    });
+  }
+
+  Future<void> _showWorkoutCompletionNotification({
+    required bool isFirstWorkoutOfDay,
+  }) async {
+    final distanceMeters =
+        _routeDistanceMeters > 0 ? _routeDistanceMeters : _distanceMeters;
+    final title = _notificationService.buildWorkoutTitle(
+      isFirstWorkoutOfDay: isFirstWorkoutOfDay,
+    );
+    final body = _notificationService.buildWorkoutBody(
+      workoutName: 'Outdoor Run',
+      distanceMeters: distanceMeters,
+      elapsedSeconds: _elapsedSeconds,
+      paceText: formattedPace,
+    );
+    _completionNoticeId = DateTime.now().millisecondsSinceEpoch;
+    _completionNoticeTitle = title;
+    _completionNoticeBody = body;
+
+    await _notificationService.showWorkoutCompleteAlert(
+      workoutName: 'Outdoor Run',
+      stats:
+          '${_formatDistance(distanceMeters)} in $formattedTime${formattedPace == '--' ? '' : ' at $formattedPace'}',
+      title: title,
+      body: body,
+    );
   }
 
   @override

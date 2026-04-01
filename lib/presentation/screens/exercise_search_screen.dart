@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../data/reference/exercise_category_data.dart';
 import '../../data/models/api_exercise.dart';
+import '../../domain/providers/auth_provider.dart';
 import '../../domain/providers/exercise_search_provider.dart';
 import '../../domain/providers/routine_provider.dart';
 import '../../models/exercise.dart';
@@ -123,6 +124,7 @@ class _ExerciseSearchScreenState extends State<ExerciseSearchScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isSignedIn = context.watch<AuthProvider>().isSignedIn;
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FB),
       appBar: AppBar(
@@ -382,16 +384,20 @@ class _ExerciseSearchScreenState extends State<ExerciseSearchScreen> {
                                       child: FilledButton.icon(
                                         onPressed: isInRoutine
                                             ? null
-                                            : () => _addToRoutine(exercise),
+                                            : !isSignedIn
+                                                ? null
+                                                : () => _addToRoutine(exercise),
                                         icon: Icon(
                                           isInRoutine
                                               ? Icons.check
                                               : Icons.playlist_add_outlined,
                                         ),
                                         label: Text(
-                                          isInRoutine
-                                              ? 'Added to Routine'
-                                              : 'Add to Routine',
+                                          !isSignedIn
+                                              ? 'Sign In To Add'
+                                              : isInRoutine
+                                                  ? 'Added to Routine'
+                                                  : 'Add to Routine',
                                         ),
                                       ),
                                     ),
